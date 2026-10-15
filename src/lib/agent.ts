@@ -11,6 +11,14 @@ export interface ParsedAgentRequest {
   count: number;
   rationale: string;
 }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+function agentResultRows(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (isRecord(value) && Array.isArray(value.recommendations)) return value.recommendations;
+  return [];
+}
 const dictionary: [RegExp, string, string?][] = [
   [/ui\s*\/?\s*ux|ui\/ux/i, 'UI/UX', 'design'], [/react(?:\.js)?/i, 'React', 'engineering'], [/front[- ]?end/i, 'frontend', 'engineering'], [/back[- ]?end/i, 'backend', 'engineering'], [/python/i, 'Python', 'engineering'], [/\bai\b|artificial intelligence/i, 'AI', 'engineering'], [/blockchain|web3/i, 'blockchain', 'engineering'], [/digital marketing/i, 'digital marketing', 'marketing'], [/marketing/i, 'marketing', 'marketing'], [/design(?:er)?/i, 'design', 'design'], [/javascript/i, 'JavaScript', 'engineering'], [/startup/i, 'startup'],
 ];
@@ -38,6 +46,6 @@ export async function runMockAgent(text: string, services: ToolServices = {}) {
       : { query: parsed.skills.length ? undefined : text, role: parsed.roles[0], skills: parsed.skills.length ? parsed.skills : undefined, budgetTHB: parsed.budgetTHB, budgetUnit: parsed.budgetUnit };
   const output: ToolResult = await dispatchTool(tool, input, services);
   const result = output.ok ? output.result : [];
-  const rows = Array.isArray(result) ? result : (result as any)?.recommendations ?? [];
+  const rows = agentResultRows(result);
   return { parsed, toolCalls: [{ tool, input, output }], results: rows, nextSteps: output.ok ? (parsed.mode === 'team' ? ['Review role coverage and unfilled roles.', 'Create a project to record your team plan.', 'Request introductions; sharing contact details requires approval.'] : ['Review the ranked catalog results.', 'Request an introduction when you find a fit. Contact details are shared only after approval.']) : [output.error.message] };
 }

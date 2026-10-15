@@ -1,13 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
-import { dispatchTool } from '@/lib/tools';
+import { dispatchTool, type ToolResult } from '@/lib/tools';
 import { members, opportunities } from '@/lib/seed';
+import type { Introduction } from '@/lib/types';
+
+function expectSuccess(result: ToolResult): asserts result is Extract<ToolResult, { ok: true }> {
+  expect(result.ok).toBe(true);
+  if (!result.ok) throw new Error('Expected successful tool result');
+}
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+function hasStringId(value: unknown): value is { id: string } {
+  return isRecord(value) && typeof value.id === 'string';
+}
+function idList(value: unknown): string[] {
+  if (!Array.isArray(value) || !value.every(hasStringId)) throw new Error('Expected rows with string IDs');
+  return value.map((item) => item.id);
+}
+function hasCandidateMemberId(value: unknown): value is { member: { id: string } } {
+  return isRecord(value) && isRecord(value.member) && typeof value.member.id === 'string';
+}
+function isCandidateList(value: unknown): value is { member: { id: string } }[] {
+  return Array.isArray(value) && value.every(hasCandidateMemberId);
+}
 
 describe('dispatchTool', () => {
   it('dispatches all seven tools to domain services', async () => {
     const services = {
       members, opportunities,
-      createProject: vi.fn(async (input: any) => ({ id: 'p1', ...input })),
-      requestIntroduction: vi.fn(async (input: any) => ({ id: 'i1', ...input, status: 'pending' as const, createdAt: '2026-01-01' })),
+      createProject: vi.fn(async (input) => ({ id: 'p1', ...input })),
+      requestIntroduction: vi.fn(async (input) => ({ id: 'i1', ...input, status: 'pending' as const, createdAt: '2026-01-01' })),
     };
     const calls: [string, unknown][] = [
       ['search_members', { skills: ['React'] }], ['search_opportunities', { skills: ['Python'] }],
@@ -26,57 +48,66 @@ describe('dispatchTool', () => {
       ['get_member_profile', { memberId: members[0].id }],
     ];
     const results = await Promise.all(cases.map(([tool, input]) => dispatchTool(tool, input)));
-    expect((results[0] as any).result.length).toBeGreaterThan(0);
-    expect((results[0] as any).result.every((item: any) => members.some((member) => member.id === item.id))).toBe(true);
-    expect((results[1] as any).result.every((item: any) => opportunities.some((opportunity) => opportunity.id === item.id))).toBe(true);
-    expect((results[2] as any).result.every((item: any) => members.some((member) => member.id === item.member.id))).toBe(true);
-    expect((results[1] as any).result.length).toBeGreaterThan(0);
-    expect((results[2] as any).result.length).toBeGreaterThan(0);
-    expect((results[3] as any).result).toMatchObject({ filledRoles: ['Frontend engineer', 'Product designer'], unfilledRoles: [] });
-    expect((results[3] as any).result.recommendations.every((item: any) => members.some((member) => member.id === item.member.id))).toBe(true);
-    expect((results[3] as any).result.recommendations.length).toBe(2);
-    expect((results[4] as any).result.id).toBe(members[0].id);
+    const [memberResult, opportunityResult, candidateResult, teamResult, profileResult] = results.map((result) => {
+      expectSuccess(result);
+      return result;
+    });
+    const memberIds = idList(memberResult.result);
+    const opportunityIds = idList(opportunityResult.result);
+    expect(memberIds.length).toBeGreaterThan(0);
+    expect(memberIds.every((id) => members.some((member) => member.id === id))).toBe(true);
+    expect(opportunityIds.every((id) => opportunities.some((opportunity) => opportunity.id === id))).toBe(true);
+    expect(opportunityIds.length).toBeGreaterThan(0);
+    if (!isCandidateList(candidateResult.result)) throw new Error('Expected candidate rows');
+    expect(candidateResult.result.length).toBeGreaterThan(0);
+    expect(candidateResult.result.every((row) => members.some((member) => member.id === row.member.id))).toBe(true);
+    if (!isRecord(teamResult.result)) throw new Error('Expected team result');
+    expect(teamResult.result).toMatchObject({ filledRoles: ['Frontend engineer', 'Product designer'], unfilledRoles: [] });
+    if (!isCandidateList(teamResult.result.recommendations) || teamResult.result.recommendations.length !== 2) throw new Error('Expected recommendations');
+    expect(teamResult.result.recommendations.every((row) => members.some((member) => member.id === row.member.id))).toBe(true);
+    expect(isRecord(profileResult.result) && profileResult.result.id).toBe(members[0].id);
   });
   it('rejects unknown tools and malformed inputs with stable errors', async () => {
-    expect(await dispatchTool('not_a_tool', {}, {} as any)).toMatchObject({ ok: false, error: { code: 'UNKNOWN_TOOL' } });
-    expect(await dispatchTool('search_members', { availability: 'yesterday' }, {} as any)).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
-    expect(await dispatchTool('search_opportunities', { budgetTHB: 50000 }, {} as any)).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+    expect(await dispatchTool('not_a_tool', {})).toMatchObject({ ok: false, error: { code: 'UNKNOWN_TOOL' } });
+    expect(await dispatchTool('search_members', { availability: 'yesterday' })).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+    expect(await dispatchTool('search_opportunities', { budgetTHB: 50000 })).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
   });
   it('does not expose private contact fields in public profiles', async () => {
-    const result = await dispatchTool('get_member_profile', { memberId: members[0].id }, { members: [{ ...members[0], email: 'private@example.test', phone: '000' }] } as any);
-    expect(result).toMatchObject({ ok: true });
+    const result = await dispatchTool('get_member_profile', { memberId: members[0].id }, { members: [Object.assign({ ...members[0] }, { email: 'private@example.test', phone: '000' })] });
+    expectSuccess(result);
     expect(JSON.stringify(result)).not.toContain('private@example.test');
-    expect(result.ok && 'email' in (result.result as object)).toBe(false);
-    expect(result.ok && 'phone' in (result.result as object)).toBe(false);
+    expect(isRecord(result.result) && 'email' in result.result).toBe(false);
+    expect(isRecord(result.result) && 'phone' in result.result).toBe(false);
   });
   it('omits injected private fields from opportunity search results', async () => {
     const result = await dispatchTool('search_opportunities', { skills: ['Python'] }, {
-      opportunities: [{ ...opportunities[0], requiredSkills: ['Python'], email: 'private@example.test', phone: '555', contact: 'secret' }] as any,
+      opportunities: [Object.assign({ ...opportunities[0], requiredSkills: ['Python'] }, { email: 'private@example.test', phone: '555', contact: 'secret' })],
     });
-    expect(result).toMatchObject({ ok: true });
+    expectSuccess(result);
     expect(JSON.stringify(result)).not.toContain('private@example.test');
     expect(JSON.stringify(result)).not.toContain('555');
     expect(JSON.stringify(result)).not.toContain('secret');
-    expect((result as any).result[0]).toMatchObject({
+    if (!Array.isArray(result.result) || !isRecord(result.result[0])) throw new Error('Expected opportunity rows');
+    expect(result.result[0]).toMatchObject({
       id: opportunities[0].id, title: opportunities[0].title, ownerId: opportunities[0].ownerId,
       requiredSkills: ['Python'],
     });
   });
   it('redacts contacts from workflow adapter results and enforces pending introductions', async () => {
     const project = await dispatchTool('create_project', { ownerId: members[0].id, title: 'Demo', description: 'Demo project', skills: [] }, {
-      createProject: async () => ({ id: 'p1', ownerId: members[0].id, title: 'Demo', description: 'Demo project', skills: [], budgetTHB: 10, email: 'secret@example.test', phone: '555' } as any),
+      createProject: async () => Object.assign({ id: 'p1', ownerId: members[0].id, title: 'Demo', description: 'Demo project', skills: [], budgetTHB: 10 }, { email: 'secret@example.test', phone: '555' }),
     });
     expect(project).toMatchObject({ ok: true, tool: 'create_project', result: { id: 'p1', title: 'Demo' } });
     expect(JSON.stringify(project)).not.toContain('secret@example.test');
     expect(JSON.stringify(project)).not.toContain('555');
     const intro = await dispatchTool('request_introduction', { projectId: 'p1', memberId: members[0].id }, {
-      requestIntroduction: async () => ({ id: 'i1', projectId: 'p1', memberId: members[0].id, status: 'pending', createdAt: '2026-01-01', email: 'secret@example.test', phone: '555' } as any),
+      requestIntroduction: async () => Object.assign({ id: 'i1', projectId: 'p1', memberId: members[0].id, status: 'pending' as const, createdAt: '2026-01-01' }, { email: 'secret@example.test', phone: '555' }),
     });
     expect(intro).toMatchObject({ ok: true, result: { id: 'i1', projectId: 'p1', memberId: members[0].id, status: 'pending' } });
     expect(JSON.stringify(intro)).not.toContain('secret@example.test');
     expect(JSON.stringify(intro)).not.toContain('555');
     const invalid = await dispatchTool('request_introduction', { projectId: 'p1', memberId: members[0].id }, {
-      requestIntroduction: async () => ({ id: 'i2', projectId: 'p1', memberId: members[0].id, status: 'shared', createdAt: '2026-01-01' } as any),
+      requestIntroduction: async () => ({ id: 'i2', projectId: 'p1', memberId: members[0].id, status: 'shared' as Introduction['status'], createdAt: '2026-01-01' }),
     });
     expect(invalid).toMatchObject({ ok: false, error: { code: 'INVALID_SERVICE_RESULT' } });
   });

@@ -27,7 +27,7 @@ export interface MemberProfile {
   openToHire: boolean;
 }
 
-export interface Member extends MemberProfile {}
+export type Member = MemberProfile;
 
 export interface Opportunity {
   id: string;

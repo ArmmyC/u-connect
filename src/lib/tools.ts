@@ -40,30 +40,31 @@ async function dispatchToolUnchecked(name: string, input: unknown, services: Too
   if (!parsed.success) return failure('INVALID_INPUT', parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; '));
   const catalog = services.members ?? members;
   const opps = services.opportunities ?? opportunities;
-  const args = parsed.data as Record<string, any>;
   switch (tool) {
-    case 'search_members': return { ok: true, tool, result: searchMembers(args, catalog).map(publicMember) };
-    case 'search_opportunities': return { ok: true, tool, result: searchOpportunities(args, opps).map(publicOpportunity) };
+    case 'search_members': return { ok: true, tool, result: searchMembers(toolSchemas.search_members.parse(input), catalog).map(publicMember) };
+    case 'search_opportunities': return { ok: true, tool, result: searchOpportunities(toolSchemas.search_opportunities.parse(input), opps).map(publicOpportunity) };
     case 'match_candidates': {
-      const opportunity = opps.find((item) => item.id === args.opportunityId);
+      const { opportunityId } = toolSchemas.match_candidates.parse(input);
+      const opportunity = opps.find((item) => item.id === opportunityId);
       return opportunity ? { ok: true, tool, result: matchCandidates(opportunity, catalog).map((item) => ({ ...item, member: publicMember(item.member) })) } : failure('NOT_FOUND', 'Opportunity was not found.');
     }
     case 'recommend_team': {
-      const result = recommendTeam(args, catalog);
+      const result = recommendTeam(toolSchemas.recommend_team.parse(input), catalog);
       return { ok: true, tool, result: { ...result, recommendations: result.recommendations.map((item) => ({ ...item, member: publicMember(item.member) })) } };
     }
     case 'get_member_profile': {
-      const member = catalog.find((item) => item.id === args.memberId);
+      const { memberId } = toolSchemas.get_member_profile.parse(input);
+      const member = catalog.find((item) => item.id === memberId);
       return member ? { ok: true, tool, result: publicMember(member) } : failure('NOT_FOUND', 'Member was not found.');
     }
     case 'create_project': {
       if (!services.createProject) return failure('SERVICE_UNAVAILABLE', 'Project creation service is unavailable.');
-      const project = await services.createProject(args as Parameters<NonNullable<ToolServices['createProject']>>[0]);
+      const project = await services.createProject(toolSchemas.create_project.parse(input));
       return { ok: true, tool, result: projectPublic(project) };
     }
     case 'request_introduction': {
       if (!services.requestIntroduction) return failure('SERVICE_UNAVAILABLE', 'Introduction request service is unavailable.');
-      const introduction = await services.requestIntroduction(args as Parameters<NonNullable<ToolServices['requestIntroduction']>>[0]);
+      const introduction = await services.requestIntroduction(toolSchemas.request_introduction.parse(input));
       if (introduction.status !== 'pending') return failure('INVALID_SERVICE_RESULT', 'Introduction service must return a pending request.');
       return { ok: true, tool, result: introductionPublic(introduction) };
     }

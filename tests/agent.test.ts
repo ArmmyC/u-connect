@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { parseAgentRequest, runMockAgent } from '@/lib/agent';
 import { members } from '@/lib/seed';
-import { dispatchTool } from '@/lib/tools';
+
+function hasStringId(value: unknown): value is { id: string } {
+  return typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
+}
 
 describe('parseAgentRequest', () => {
   it.each([
@@ -26,13 +29,13 @@ describe('parseAgentRequest', () => {
     expect(result.toolCalls[0].tool).toBe('search_members');
     expect(result.toolCalls[0].output.ok).toBe(true);
     expect(result.results.length).toBeGreaterThan(0);
-    expect(result.results.every((item: any) => members.some((member) => member.id === item.id))).toBe(true);
+    expect(result.results.every((item) => hasStringId(item) && members.some((member) => member.id === item.id))).toBe(true);
     expect(result.nextSteps.length).toBeGreaterThan(0);
   });
   it('passes explicit member budget amounts and units through to filtering', async () => {
     const response = await runMockAgent('Find React freelancers under ฿500/hour');
     expect(response.parsed).toMatchObject({ budgetTHB: 500, budgetUnit: 'hourly' });
     expect(response.toolCalls[0].input).toMatchObject({ budgetTHB: 500, budgetUnit: 'hourly' });
-    expect(response.results.every((item: any) => item.compensationUnit === 'hourly' && item.compensationAmountTHB <= 500)).toBe(true);
+    expect(response.results.every((item) => typeof item === 'object' && item !== null && 'compensationUnit' in item && item.compensationUnit === 'hourly' && 'compensationAmountTHB' in item && typeof item.compensationAmountTHB === 'number' && item.compensationAmountTHB <= 500)).toBe(true);
   });
 });
