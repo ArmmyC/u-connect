@@ -240,7 +240,7 @@ export async function createDemoStore(path: string): Promise<DemoStore> {
             break;
           case 'share_contact':
             if (!isOwner) throw storeError('FORBIDDEN', 'Only the project owner can share contact details.', 403);
-            requireStatus(['accepted', 'confirmed'], 'share contact details for');
+            requireStatus(['confirmed'], 'share contact details for');
             introduction.status = 'shared';
             break;
         }

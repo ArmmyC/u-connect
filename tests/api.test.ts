@@ -113,6 +113,11 @@ describe('demo API routes', () => {
 
     const accepted = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ben', action: 'accept' }), { params: Promise.resolve({ id: intro.result.id }) });
     expect(accepted.status).toBe(200);
+    const prematureShare = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'share_contact' }), { params: Promise.resolve({ id: intro.result.id }) });
+    expect(prematureShare.status).toBe(409);
+    expect(await responseBody(prematureShare)).toMatchObject({ ok: false, error: { code: 'INVALID_TRANSITION' } });
+    const afterPrematureShare = await getState();
+    expect((await responseBody<{ sharedContacts: Record<string, unknown> }>(afterPrematureShare)).sharedContacts).toEqual({});
     const confirmed = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'confirm' }), { params: Promise.resolve({ id: intro.result.id }) });
     expect(confirmed.status).toBe(200);
     const shared = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'share_contact' }), { params: Promise.resolve({ id: intro.result.id }) });

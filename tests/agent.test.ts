@@ -38,4 +38,40 @@ describe('parseAgentRequest', () => {
     expect(response.toolCalls[0].input).toMatchObject({ budgetTHB: 500, budgetUnit: 'hourly' });
     expect(response.results.every((item) => typeof item === 'object' && item !== null && 'compensationUnit' in item && item.compensationUnit === 'hourly' && 'compensationAmountTHB' in item && typeof item.compensationAmountTHB === 'number' && item.compensationAmountTHB <= 500)).toBe(true);
   });
+  it('fills the frontend and UI/UX roles in the startup MVP brief', async () => {
+    const response = await runMockAgent('I need a frontend developer and a UI/UX designer to launch my startup MVP');
+    expect(response.parsed.roles).toEqual(expect.arrayContaining(['frontend', 'design']));
+    expect(response.parsed.roles).not.toContain('engineering');
+    const output = response.toolCalls[0].output;
+    expect(output.ok).toBe(true);
+    if (!output.ok || typeof output.result !== 'object' || output.result === null || !('filledRoles' in output.result) || !('unfilledRoles' in output.result)) throw new Error('Expected a team recommendation result');
+    expect(output.result.filledRoles).toEqual(expect.arrayContaining(['frontend', 'design']));
+    expect(output.result.unfilledRoles).toEqual([]);
+    expect(response.results).toEqual(expect.arrayContaining([
+      expect.objectContaining({ member: expect.objectContaining({ id: 'mem-ben' }), requestedRole: 'frontend' }),
+      expect.objectContaining({ member: expect.objectContaining({ id: 'mem-erin' }), requestedRole: 'design' }),
+    ]));
+  });
+  it('finds the Python AI forecasting opportunity from the required example prompt', async () => {
+    const response = await runMockAgent('Find Python/AI opportunities');
+    expect(response.toolCalls[0].tool).toBe('search_opportunities');
+    expect(response.results).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'opp-ai-forecast' })]));
+  });
+  it('uses the parsed role instead of adding the full sentence as a second filter', async () => {
+    const response = await runMockAgent('Find a designer');
+    expect(response.toolCalls[0].input).toMatchObject({ role: 'design' });
+    expect(response.toolCalls[0].input).not.toHaveProperty('query');
+    expect(response.results).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'mem-erin' })]));
+  });
+  it('treats a unitless Team Builder budget as a project budget', async () => {
+    const response = await runMockAgent('Build a startup MVP team with a budget of ฿50,000');
+    expect(response.parsed).toMatchObject({ budgetTHB: 50000, budgetUnit: 'project' });
+    expect(response.toolCalls[0].input).toMatchObject({ budgetTHB: 50000, budgetUnit: 'project' });
+    expect(response.toolCalls[0].output.ok).toBe(true);
+  });
+  it('adds grounded fit reasons to member-search results', async () => {
+    const response = await runMockAgent('Find a React freelance developer');
+    const ben = response.results.find((item) => typeof item === 'object' && item !== null && 'id' in item && item.id === 'mem-ben');
+    expect(ben).toMatchObject({ reasons: expect.arrayContaining(['Skills include React.', 'Profile lists availability as available.']) });
+  });
 });

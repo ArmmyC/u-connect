@@ -81,6 +81,9 @@ describe('createDemoStore', () => {
     const acceptedSnapshot = await store.getSnapshot();
     expect(acceptedSnapshot.introductions[0].status).toBe('accepted');
     expect(acceptedSnapshot.sharedContacts).toEqual({});
+    await expect(store.transitionIntroduction({ introductionId: introduction.id, actorId: 'mem-ada', action: 'share_contact' }))
+      .rejects.toMatchObject({ code: 'INVALID_TRANSITION', status: 409 });
+    expect((await store.getSnapshot()).sharedContacts).toEqual({});
 
     await store.transitionIntroduction({ introductionId: introduction.id, actorId: 'mem-ada', action: 'confirm' });
     await expect(store.transitionIntroduction({ introductionId: introduction.id, actorId: 'mem-ben', action: 'share_contact' }))

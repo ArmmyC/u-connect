@@ -59,10 +59,14 @@ export function recommendTeam(options: TeamOptions, catalog: Member[] = members)
   const roles = options.roles ?? [];
   const requiredSkills = options.skills ?? [];
   const eligible = catalog.filter((member) => member.availability !== 'busy' &&
-    (!requiredSkills.length || member.skills.some((skill) => requiredSkills.some((wanted) => normalize(skill) === normalize(wanted)))));
+    (!requiredSkills.length || member.skills.some((skill) => requiredSkills.some((wanted) => normalize(skill) === normalize(wanted))) ||
+      roles.some((role) => normalize(member.role) === normalize(role) || normalize(member.headline).includes(normalize(role)))));
   const byScore = (role: string) => eligible
     .filter((member) => normalize(member.role) === normalize(role) || normalize(member.headline).includes(normalize(role)))
-    .map((member) => ({ ...scoreMember(member, requiredSkills, options.budgetTHB, options.budgetUnit), requestedRole: role }))
+    .map((member) => {
+      const match = scoreMember(member, requiredSkills, options.budgetTHB, options.budgetUnit);
+      return { ...match, reasons: [`Profile role or headline matches ${role}.`, ...match.reasons], requestedRole: role };
+    })
     .sort((a, b) => b.score - a.score || a.member.id.localeCompare(b.member.id));
   if (roles.length) {
     const assignedMemberRole = new Map<string, number>();
