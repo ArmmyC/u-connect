@@ -92,7 +92,10 @@ describe('createDemoStore', () => {
     const sharedSnapshot = await store.getSnapshot();
 
     expect(sharedSnapshot.introductions[0].status).toBe('shared');
-    expect(sharedSnapshot.sharedContacts['mem-ben']).toMatchObject({ email: 'mem-ben@u-connect.example.test' });
+    expect(sharedSnapshot.sharedContacts).toEqual({});
+    expect((await store.getSnapshot('mem-ada')).sharedContacts['mem-ben']).toMatchObject({ email: 'mem-ben@u-connect.example.test' });
+    expect((await store.getSnapshot('mem-ben')).sharedContacts['mem-ben']).toMatchObject({ email: 'mem-ben@u-connect.example.test' });
+    expect((await store.getSnapshot('mem-erin')).sharedContacts).toEqual({});
   });
 
   it('records unique interest and preserves state across reloads', async () => {

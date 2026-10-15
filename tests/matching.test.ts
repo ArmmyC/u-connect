@@ -76,12 +76,28 @@ describe('matching', () => {
     expect(result.unfilledRoles).toEqual(['Recruiter']);
   });
 
+  it('requires role-relevant hard skills before counting a requested role as filled', () => {
+    const engineersWithoutBlockchain = members.filter((member) => member.role === 'engineering' && member.availability !== 'busy');
+    const result = recommendTeam({ roles: ['engineering'], skills: ['blockchain'] }, engineersWithoutBlockchain);
+
+    expect(result.recommendations).toEqual([]);
+    expect(result.filledRoles).toEqual([]);
+    expect(result.unfilledRoles).toEqual(['engineering']);
+  });
+
   it('returns a ranked fallback team when no roles are specified', () => {
     const result = recommendTeam({ count: 3 });
     expect(result.recommendations).toHaveLength(3);
     expect(result.recommendations.every((item) => item.requestedRole === null)).toBe(true);
     expect(result.filledRoles).toEqual([]);
     expect(result.unfilledRoles).toEqual([]);
+  });
+
+  it('filters fallback team candidates by every requested hard skill', () => {
+    const result = recommendTeam({ skills: ['React', 'Python'], count: 5 });
+
+    expect(result.recommendations.length).toBeGreaterThan(0);
+    expect(result.recommendations.every(({ member }) => ['React', 'Python'].every((skill) => member.skills.includes(skill)))).toBe(true);
   });
 
   it('covers all roles when a flexible candidate could otherwise take a scarce role', () => {

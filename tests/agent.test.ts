@@ -9,7 +9,7 @@ function hasStringId(value: unknown): value is { id: string } {
 describe('parseAgentRequest', () => {
   it.each([
     ['Find a React freelance developer', 'members', ['engineering'], ['React']],
-    ['Build a startup MVP team with frontend and UI/UX', 'team', ['frontend', 'design'], ['frontend', 'UI/UX']],
+    ['Build a startup MVP team with frontend and UI/UX', 'team', ['frontend', 'design'], ['UI/UX']],
     ['Find Python/AI opportunities', 'opportunities', [], ['Python', 'AI']],
     ['Recommend a blockchain team', 'team', ['engineering'], ['blockchain']],
     ['Find digital marketing people', 'members', ['marketing'], ['digital marketing']],
@@ -62,6 +62,24 @@ describe('parseAgentRequest', () => {
     expect(response.toolCalls[0].input).toMatchObject({ role: 'design' });
     expect(response.toolCalls[0].input).not.toHaveProperty('query');
     expect(response.results).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'mem-erin' })]));
+  });
+  it('finds frontend profiles by role without requiring a literal frontend skill tag', async () => {
+    const response = await runMockAgent('Find a frontend developer');
+    expect(response.parsed.roles).toContain('frontend');
+    expect(response.parsed.skills).not.toContain('frontend');
+    expect(response.toolCalls[0].input).toMatchObject({ role: 'frontend' });
+    expect(response.toolCalls[0].input).not.toHaveProperty('skills');
+    expect(response.results).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'mem-ben' })]));
+  });
+  it('does not report blockchain engineering coverage without the required hard skill', async () => {
+    const response = await runMockAgent('Recommend a blockchain team');
+    expect(response.parsed).toMatchObject({ roles: ['engineering'], skills: ['blockchain'] });
+    const output = response.toolCalls[0].output;
+    expect(output.ok).toBe(true);
+    if (!output.ok || typeof output.result !== 'object' || output.result === null || !('filledRoles' in output.result) || !('unfilledRoles' in output.result)) throw new Error('Expected a team recommendation result');
+    expect(output.result.filledRoles).not.toContain('engineering');
+    expect(output.result.unfilledRoles).toContain('engineering');
+    expect(response.results).toEqual([]);
   });
   it('treats a unitless Team Builder budget as a project budget', async () => {
     const response = await runMockAgent('Build a startup MVP team with a budget of ฿50,000');

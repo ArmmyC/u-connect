@@ -94,10 +94,12 @@ function publicInterest(interest: Interest): Interest {
   return { opportunityId: interest.opportunityId, memberId: interest.memberId, createdAt: interest.createdAt };
 }
 
-function projectSnapshot(state: DemoState): PublicDemoState {
+function projectSnapshot(state: DemoState, actorId?: string): PublicDemoState {
   const sharedContacts: Record<string, SharedContact> = {};
   for (const introduction of state.introductions) {
     if (introduction.status !== 'shared') continue;
+    const project = state.projects.find((entry) => entry.id === introduction.projectId);
+    if (!actorId || (actorId !== introduction.memberId && actorId !== project?.ownerId)) continue;
     const contact = privateContacts.get(introduction.memberId);
     if (contact) sharedContacts[introduction.memberId] = { ...contact };
   }
@@ -155,7 +157,7 @@ async function loadState(filePath: string): Promise<DemoState> {
 }
 
 export interface DemoStore {
-  getSnapshot(): Promise<PublicDemoState>;
+  getSnapshot(actorId?: string): Promise<PublicDemoState>;
   createProject(input: CreateProjectInput): Promise<Project>;
   requestIntroduction(input: RequestIntroductionInput): Promise<Introduction>;
   transitionIntroduction(input: TransitionIntroductionInput): Promise<Introduction>;
@@ -181,9 +183,9 @@ export async function createDemoStore(path: string): Promise<DemoStore> {
   }
 
   return {
-    async getSnapshot() {
+    async getSnapshot(actorId?: string) {
       await writeQueue;
-      return projectSnapshot(state);
+      return projectSnapshot(state, actorId);
     },
 
     createProject(input) {

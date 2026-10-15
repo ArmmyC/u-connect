@@ -22,7 +22,7 @@ function agentResultRows(value: unknown): unknown[] {
 const dictionary: Array<{ pattern: RegExp; value: string; role?: string; skill?: boolean }> = [
   { pattern: /ui\s*\/?\s*ux|ui\/ux/i, value: 'UI/UX', role: 'design' },
   { pattern: /react(?:\.js)?/i, value: 'React', role: 'engineering' },
-  { pattern: /front[- ]?end/i, value: 'frontend', role: 'frontend' },
+  { pattern: /front[- ]?end/i, value: 'frontend', role: 'frontend', skill: false },
   { pattern: /back[- ]?end/i, value: 'backend', role: 'backend', skill: false },
   { pattern: /python/i, value: 'Python', role: 'engineering' },
   { pattern: /\bai\b|artificial intelligence/i, value: 'AI', role: 'engineering' },

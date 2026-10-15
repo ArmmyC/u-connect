@@ -40,6 +40,16 @@ function jsonRequest(method: string, value: unknown) {
   });
 }
 
+function stateRequest(actorId?: string) {
+  const url = new URL('http://localhost/api/state');
+  if (actorId) url.searchParams.set('actorId', actorId);
+  return new Request(url);
+}
+
+function getStateFor(actorId?: string) {
+  return getState(stateRequest(actorId));
+}
+
 function responseBody<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
@@ -52,7 +62,7 @@ afterEach(async () => {
 describe('demo API routes', () => {
   it('returns seed state without private contacts before explicit sharing', async () => {
     await useTemporaryState();
-    const response = await getState();
+    const response = await getStateFor();
     const state = await responseBody<{ members: unknown[]; sharedContacts: Record<string, unknown> }>(response);
 
     expect(response.status).toBe(200);
@@ -104,7 +114,7 @@ describe('demo API routes', () => {
     expect(duplicate.status).toBe(409);
     expect(await responseBody(duplicate)).toMatchObject({ ok: false, error: { code: 'DUPLICATE_INTRO' } });
 
-    const beforeShare = await getState();
+    const beforeShare = await getStateFor('mem-ada');
     expect(JSON.stringify(await responseBody(beforeShare))).not.toContain('@u-connect.example.test');
 
     const denied = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'accept' }), { params: Promise.resolve({ id: intro.result.id }) });
@@ -116,16 +126,23 @@ describe('demo API routes', () => {
     const prematureShare = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'share_contact' }), { params: Promise.resolve({ id: intro.result.id }) });
     expect(prematureShare.status).toBe(409);
     expect(await responseBody(prematureShare)).toMatchObject({ ok: false, error: { code: 'INVALID_TRANSITION' } });
-    const afterPrematureShare = await getState();
+    const afterPrematureShare = await getStateFor('mem-ada');
     expect((await responseBody<{ sharedContacts: Record<string, unknown> }>(afterPrematureShare)).sharedContacts).toEqual({});
     const confirmed = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'confirm' }), { params: Promise.resolve({ id: intro.result.id }) });
     expect(confirmed.status).toBe(200);
     const shared = await patchIntro(jsonRequest('PATCH', { actorId: 'mem-ada', action: 'share_contact' }), { params: Promise.resolve({ id: intro.result.id }) });
     expect(shared.status).toBe(200);
 
-    const afterShare = await getState();
+    const afterShare = await getStateFor('mem-ada');
     const state = await responseBody<{ sharedContacts: Record<string, { email: string }> }>(afterShare);
     expect(state.sharedContacts['mem-ben'].email).toBe('mem-ben@u-connect.example.test');
+
+    const candidateState = await responseBody<{ sharedContacts: Record<string, { email: string }> }>(await getStateFor('mem-ben'));
+    expect(candidateState.sharedContacts['mem-ben'].email).toBe('mem-ben@u-connect.example.test');
+    const unrelatedActorState = await responseBody<{ sharedContacts: Record<string, unknown> }>(await getStateFor('mem-erin'));
+    expect(unrelatedActorState.sharedContacts).toEqual({});
+    const anonymousState = await responseBody<{ sharedContacts: Record<string, unknown> }>(await getStateFor());
+    expect(anonymousState.sharedContacts).toEqual({});
     const profile = await postTool(jsonRequest('POST', { memberId: 'mem-ben' }), { params: Promise.resolve({ tool: 'get_member_profile' }) });
     expect(JSON.stringify(await responseBody(profile))).not.toContain('@u-connect.example.test');
   });

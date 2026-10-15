@@ -226,7 +226,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async (options?: { quiet?: boolean }) => {
     if (!options?.quiet) setLoadStatus(hasLoaded.current ? "refreshing" : "loading");
     try {
-      const nextSnapshot = await requestJson<unknown>("/api/state", { cache: "no-store" });
+      const nextSnapshot = await requestJson<unknown>(`/api/state?actorId=${encodeURIComponent(actorId)}`, { cache: "no-store" });
       if (!isStateSnapshot(nextSnapshot)) throw new DemoApiError("The state response has an unexpected shape.", "INVALID_RESPONSE");
       setSnapshot(nextSnapshot);
       setLoadError(null);
@@ -238,7 +238,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setLoadStatus(hasLoaded.current ? "success" : "error");
       throw error;
     }
-  }, []);
+  }, [actorId]);
 
   useEffect(() => {
     void refresh().catch(() => undefined);
