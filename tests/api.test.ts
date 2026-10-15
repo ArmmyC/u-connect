@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GET as getState } from '@/app/api/state/route';
@@ -8,13 +8,28 @@ import { POST as postAgent } from '@/app/api/agent/route';
 import { PATCH as patchIntro } from '@/app/api/intros/[id]/route';
 import { POST as resetDemo } from '@/app/api/demo/reset/route';
 import { POST as postInterest } from '@/app/api/opportunities/[id]/interest/route';
+import { members, opportunities } from '@/lib/seed';
+import type { OpportunityStatus } from '@/lib/types';
 
 const temporaryPaths: string[] = [];
 
-async function useTemporaryState() {
+async function useTemporaryState(opportunityStatus?: OpportunityStatus) {
   const directory = await mkdtemp(join(tmpdir(), 'u-connect-api-'));
   temporaryPaths.push(directory);
-  process.env.U_CONNECT_DEMO_STATE_PATH = join(directory, 'state.json');
+  const statePath = join(directory, 'state.json');
+  process.env.U_CONNECT_DEMO_STATE_PATH = statePath;
+  if (opportunityStatus) {
+    const state = {
+      members,
+      opportunities: opportunities.map((opportunity) => opportunity.id === 'opp-marketplace'
+        ? { ...opportunity, status: opportunityStatus }
+        : opportunity),
+      projects: [],
+      introductions: [],
+      interests: [],
+    };
+    await writeFile(statePath, JSON.stringify(state), 'utf8');
+  }
 }
 
 function jsonRequest(method: string, value: unknown) {
@@ -121,6 +136,28 @@ describe('demo API routes', () => {
     const state = await responseBody<{ interests: unknown[]; projects: unknown[] }>(reset);
     expect(state.interests).toEqual([]);
     expect(state.projects).toEqual([]);
+  });
+
+  it('rejects interest from the opportunity owner with a permission error', async () => {
+    await useTemporaryState();
+    const response = await postInterest(jsonRequest('POST', { actorId: 'mem-inn' }), { params: Promise.resolve({ id: 'opp-marketplace' }) });
+
+    expect(response.status).toBe(403);
+    expect(await responseBody(response)).toMatchObject({
+      ok: false,
+      error: { code: 'FORBIDDEN', message: 'Opportunity owners cannot express interest in their own listing.' },
+    });
+  });
+
+  it.each(['closed', 'in-progress'] as const)('rejects interest for a %s opportunity with a conflict error', async (status) => {
+    await useTemporaryState(status);
+    const response = await postInterest(jsonRequest('POST', { actorId: 'mem-ben' }), { params: Promise.resolve({ id: 'opp-marketplace' }) });
+
+    expect(response.status).toBe(409);
+    expect(await responseBody(response)).toMatchObject({
+      ok: false,
+      error: { code: 'OPPORTUNITY_NOT_OPEN', message: 'Interest can only be expressed in open opportunities.' },
+    });
   });
 
   it('reports one duplicate when concurrent requests target the same project member', async () => {

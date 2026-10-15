@@ -253,6 +253,12 @@ export async function createDemoStore(path: string): Promise<DemoStore> {
         const opportunity = draft.opportunities.find((entry) => entry.id === input.opportunityId);
         if (!opportunity) throw storeError('NOT_FOUND', 'Opportunity was not found.', 404);
         missingMember(draft, input.memberId);
+        if (opportunity.ownerId === input.memberId) {
+          throw storeError('FORBIDDEN', 'Opportunity owners cannot express interest in their own listing.', 403);
+        }
+        if (opportunity.status !== 'open') {
+          throw storeError('OPPORTUNITY_NOT_OPEN', 'Interest can only be expressed in open opportunities.', 409);
+        }
         const existing = draft.interests.find((entry) => entry.opportunityId === input.opportunityId && entry.memberId === input.memberId);
         if (existing) return existing;
         const interest: Interest = { opportunityId: input.opportunityId, memberId: input.memberId, createdAt: new Date().toISOString() };
