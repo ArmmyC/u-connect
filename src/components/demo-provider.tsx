@@ -145,6 +145,41 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "The local demo service could not complete the request.";
 }
 
+type FeedbackSetter = (feedback: DemoFeedback | null) => void;
+type MutationStateSetter = (isMutating: boolean) => void;
+
+export async function performDemoMutation<T>(
+  successMessage: string,
+  operation: () => Promise<T>,
+  refresh: () => Promise<void>,
+  setActionFeedback: FeedbackSetter,
+  setIsMutating: MutationStateSetter,
+): Promise<T> {
+  setIsMutating(true);
+  setActionFeedback({ status: "pending", message: "Saving your change…" });
+  try {
+    const result = await operation();
+    let refreshFailed = false;
+    try {
+      await refresh();
+    } catch {
+      refreshFailed = true;
+    }
+    setActionFeedback({
+      status: "success",
+      message: refreshFailed
+        ? `${successMessage} The latest state refresh failed, so this view may be stale.`
+        : successMessage,
+    });
+    return result;
+  } catch (error) {
+    setActionFeedback({ status: "error", message: errorMessage(error) });
+    throw error;
+  } finally {
+    setIsMutating(false);
+  }
+}
+
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -251,21 +286,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     }
   }, [actorId]);
 
-  const performMutation = useCallback(async function performMutation<T>(successMessage: string, operation: () => Promise<T>): Promise<T> {
-    setIsMutating(true);
-    setActionFeedback({ status: "pending", message: "Saving your change…" });
-    try {
-      const result = await operation();
-      await refresh({ quiet: true });
-      setActionFeedback({ status: "success", message: successMessage });
-      return result;
-    } catch (error) {
-      setActionFeedback({ status: "error", message: errorMessage(error) });
-      throw error;
-    } finally {
-      setIsMutating(false);
-    }
-  }, [refresh]);
+  const performMutation = useCallback(function performMutation<T>(successMessage: string, operation: () => Promise<T>): Promise<T> {
+    return performDemoMutation(
+      successMessage,
+      operation,
+      () => refresh({ quiet: true }),
+      setActionFeedback,
+      setIsMutating,
+    );
+  }, [refresh, setActionFeedback, setIsMutating]);
 
   const runAgent = useCallback(async (text: string): Promise<AgentResponse> => {
     setAgentPending(true);

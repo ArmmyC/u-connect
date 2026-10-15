@@ -40,13 +40,13 @@ html[data-theme="light"] {
   --surface-overlay: #eef3ed;
   --text-main: #19231e;
   --text-muted: #5c6c64;
-  --text-faint: #829087;
+  --text-faint: #5b665f;
   --line: #e0e8e1;
   --line-strong: #cbd8cf;
   --accent: #5e9a31;
-  --accent-strong: #477d20;
+  --accent-strong: #5b9033;
   --accent-soft: #edf6e7;
-  --accent-foreground: #ffffff;
+  --accent-foreground: #111a0e;
   --success: #18814f;
   --success-soft: #e8f6ee;
   --warning: #97610d;
