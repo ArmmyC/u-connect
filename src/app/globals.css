@@ -1,29 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: dark;
-  --background: #0d1211;
-  --surface: #141b19;
-  --surface-raised: #192320;
-  --surface-overlay: #202b27;
-  --text-main: #edf5f1;
-  --text-muted: #a1b0aa;
-  --text-faint: #74837c;
-  --line: #293530;
-  --line-strong: #394840;
-  --accent: #b5ef78;
-  --accent-strong: #c7f590;
-  --accent-hover: #c7f590;
-  --accent-soft: #25351f;
-  --accent-foreground: #17200f;
-  --success: #6ed9a4;
-  --success-soft: #183328;
-  --warning: #f0c47a;
-  --warning-soft: #342a1b;
-  --danger: #fa938e;
-  --danger-soft: #382321;
-  --info: #8bbdff;
-  --info-soft: #1d2c3d;
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #f8fafc;
+  --surface-overlay: #f1f5f9;
+  --text-main: #111827;
+  --text-muted: #475569;
+  --text-faint: #64748b;
+  --line: #e2e8f0;
+  --line-strong: #8793a5;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-soft: #eff6ff;
+  --accent-foreground: #ffffff;
+  --success: #334155;
+  --success-soft: #f1f5f9;
+  --warning: #854d0e;
+  --warning-soft: #fffbeb;
+  --danger: #b42318;
+  --danger-soft: #fef3f2;
+  --info: #175cd3;
+  --info-soft: #eff8ff;
   --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --control-radius: 0.8rem;
@@ -33,30 +33,30 @@
   --space-card: 1.25rem;
 }
 
-html[data-theme="light"] {
-  color-scheme: light;
-  --background: #f3f6f2;
-  --surface: #ffffff;
-  --surface-raised: #f8faf7;
-  --surface-overlay: #eef3ed;
-  --text-main: #19231e;
-  --text-muted: #5c6c64;
-  --text-faint: #5b665f;
-  --line: #e0e8e1;
-  --line-strong: #cbd8cf;
-  --accent: #5e9a31;
-  --accent-strong: #45741f;
-  --accent-hover: #5b9033;
-  --accent-soft: #edf6e7;
-  --accent-foreground: #111a0e;
-  --success: #18814f;
-  --success-soft: #e8f6ee;
-  --warning: #97610d;
-  --warning-soft: #fff5df;
-  --danger: #b8443f;
-  --danger-soft: #fff0ef;
-  --info: #306da8;
-  --info-soft: #ebf4ff;
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #111318;
+  --surface: #191b22;
+  --surface-raised: #20232b;
+  --surface-overlay: #292e38;
+  --text-main: #f1f3f7;
+  --text-muted: #bdc3ce;
+  --text-faint: #939baa;
+  --line: #343843;
+  --line-strong: #687182;
+  --accent: #8aabff;
+  --accent-strong: #a3bbff;
+  --accent-hover: #b6c9ff;
+  --accent-soft: #1e2b47;
+  --accent-foreground: #101b35;
+  --success: #cbd5e1;
+  --success-soft: #262c36;
+  --warning: #f5c978;
+  --warning-soft: #3d3018;
+  --danger: #ff938f;
+  --danger-soft: #3b2325;
+  --info: #9ac4ff;
+  --info-soft: #1e2d46;
 }
 
 @theme inline {
@@ -105,9 +105,7 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(ellipse at 74% -15%, rgb(130 172 92 / 0.09), transparent 42rem),
-    var(--background);
+  background: var(--background);
   color: var(--text-main);
   font-family: var(--font-body);
   font-size: 14px;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -8,10 +9,13 @@ import {
   Compass,
   LayoutDashboard,
   Network,
+  RotateCcw,
   Sparkles,
   UsersRound,
   Workflow,
 } from "lucide-react";
+import { useDemo } from "@/components/demo-provider";
+import { Button } from "@/components/ui/button";
 import { twMerge } from "tailwind-merge";
 
 const navigation = [
@@ -47,6 +51,28 @@ interface SidebarProps {
 }
 
 export function Sidebar({ pathname, onNavigate, className }: SidebarProps) {
+  const { resetDemo, isMutating, setActorMode, setCandidateActorId } = useDemo();
+  const [resetting, setResetting] = useState(false);
+  const [resetFeedback, setResetFeedback] = useState<{ status: "success" | "error"; message: string } | null>(null);
+
+  async function handleResetDemo() {
+    setResetting(true);
+    setResetFeedback(null);
+    try {
+      await resetDemo();
+      setCandidateActorId("mem-erin");
+      setActorMode("owner");
+      setResetFeedback({ status: "success", message: "Demo data restored to its seed state." });
+    } catch (error) {
+      setResetFeedback({
+        status: "error",
+        message: error instanceof Error ? error.message : "The demo data could not be reset.",
+      });
+    } finally {
+      setResetting(false);
+    }
+  }
+
   return (
     <aside className={twMerge("flex h-full flex-col px-4 py-5", className)}>
       <Link href="/" onClick={onNavigate} className="group flex items-center gap-3 rounded-xl px-2 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
@@ -97,9 +123,28 @@ export function Sidebar({ pathname, onNavigate, className }: SidebarProps) {
           Demo environment
         </div>
         <p className="mt-2 text-[11px] leading-5 text-muted">Fictional profiles and opportunities. No external accounts connected.</p>
-        <div className="mt-3 flex items-center gap-1.5 text-[10px] font-medium text-faint">
-          <Activity aria-hidden="true" className="size-3.5" />
-          Local data workspace
+        {resetFeedback && (
+          <p role={resetFeedback.status === "error" ? "alert" : "status"} aria-live={resetFeedback.status === "error" ? "assertive" : "polite"} className={twMerge("mt-2 text-[10px] leading-4", resetFeedback.status === "error" ? "text-danger" : "text-success")}>
+            {resetFeedback.message}
+          </p>
+        )}
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-faint">
+            <Activity aria-hidden="true" className="size-3.5 shrink-0" />
+            <span>Local data</span>
+          </div>
+          <Button
+            type="button"
+            variant="subtle"
+            size="sm"
+            disabled={isMutating || resetting}
+            aria-busy={resetting}
+            onClick={() => void handleResetDemo()}
+            className="h-7 shrink-0 gap-1 px-1.5 text-[9px]"
+          >
+            <RotateCcw aria-hidden="true" className="size-3" />
+            {resetting ? "Resetting…" : "Reset Demo"}
+          </Button>
         </div>
       </div>
     </aside>

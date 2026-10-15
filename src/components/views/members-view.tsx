@@ -90,7 +90,7 @@ export function MembersView({ initialQuery = "" }: { initialQuery?: string }) {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-main sm:text-3xl">People to build with</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Explore the skills, working style, and fictional project evidence people have chosen to share.</p>
         </div>
-        {snapshot && <Badge variant="mint"><UsersRound aria-hidden="true" className="size-3.5" />{snapshot.members.length} members</Badge>}
+        {snapshot && <Badge variant="accent"><UsersRound aria-hidden="true" className="size-3.5" />{snapshot.members.length} members</Badge>}
       </header>
 
       {loadError && snapshot && <p role="status" className="rounded-control border border-warning/20 bg-warning-soft px-4 py-3 text-xs leading-5 text-warning">The latest refresh failed. Showing the last loaded directory.</p>}

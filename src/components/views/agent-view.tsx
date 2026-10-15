@@ -139,7 +139,7 @@ export function AgentView() {
           <Card className="border-accent/20">
             <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2"><Badge variant="mint">Interpreted as {response.parsed.mode}</Badge><span className="text-xs text-muted">{response.parsed.roles.length ? response.parsed.roles.join(" · ") : "Role not specified"}</span></div>
+                <div className="flex flex-wrap items-center gap-2"><Badge variant="accent">Interpreted as {response.parsed.mode}</Badge><span className="text-xs text-muted">{response.parsed.roles.length ? response.parsed.roles.join(" · ") : "Role not specified"}</span></div>
                 <h2 className="mt-3 break-words text-lg font-semibold text-main">{response.parsed.intent}</h2>
                 <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">{response.parsed.rationale}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">

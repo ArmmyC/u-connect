@@ -40,7 +40,7 @@ export function OpportunitiesView() {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-main sm:text-3xl">Opportunities worth exploring</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Find projects, roles, freelance work, and collaborations with clear requirements and listed terms.</p>
         </div>
-        {snapshot && <Badge variant="mint"><BriefcaseBusiness aria-hidden="true" className="size-3.5" />{snapshot.opportunities.length} listings</Badge>}
+        {snapshot && <Badge variant="accent"><BriefcaseBusiness aria-hidden="true" className="size-3.5" />{snapshot.opportunities.length} listings</Badge>}
       </header>
 
       {loadError && snapshot && <p role="status" className="rounded-control border border-warning/20 bg-warning-soft px-4 py-3 text-xs leading-5 text-warning">The latest refresh failed. Showing the last loaded opportunities.</p>}

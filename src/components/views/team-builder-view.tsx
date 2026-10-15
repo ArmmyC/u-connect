@@ -212,7 +212,7 @@ export function TeamBuilderView() {
             <section aria-label="Parsed project requirements" className="rounded-2xl border border-line bg-surface-raised/70 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div><p className="eyebrow">Parsed brief</p><h2 className="mt-1 text-sm font-semibold text-main">{parsedBrief.mode === "team" ? "Team recommendation" : `Current intent: ${parsedBrief.mode}`}</h2></div>
-                <Badge variant="mint">{parsedBrief.count} requested</Badge>
+                <Badge variant="accent">{parsedBrief.count} requested</Badge>
               </div>
               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="min-w-0"><dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-faint">Roles</dt><dd className="mt-1 break-words text-xs leading-5 text-main">{parsedBrief.roles.length ? parsedBrief.roles.join(", ") : "No specific role found"}</dd></div>
@@ -246,7 +246,7 @@ export function TeamBuilderView() {
                       <label key={member.id} className={`flex min-w-0 cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors focus-within:ring-2 focus-within:ring-accent ${checked ? "border-accent/40 bg-accent-soft/35" : "border-line bg-surface-raised/50 hover:border-line-strong"}`}>
                         <input type="checkbox" checked={checked} onChange={() => toggleMember(member.id)} aria-label={`Select ${member.name} for an introduction`} className="mt-1 size-4 shrink-0 accent-accent" />
                         <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-start justify-between gap-2"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-main">{member.name}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{requestedRole ?? member.headline}</span></span>{score !== null && <Badge variant="mint" className="shrink-0">{score} fit</Badge>}</span>
+                          <span className="flex flex-wrap items-start justify-between gap-2"><span className="min-w-0"><span className="block truncate text-sm font-semibold text-main">{member.name}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{requestedRole ?? member.headline}</span></span>{score !== null && <Badge variant="accent" className="shrink-0">{score} fit</Badge>}</span>
                           <span className="mt-2 block text-[11px] leading-5 text-muted">{reasons[0] ?? `Profile lists ${member.skills.slice(0, 3).join(", ")}.`}</span>
                           {member.projects[0] && <span className="mt-2 block border-t border-line/70 pt-2 text-[10px] leading-4 text-faint">Project evidence: {member.projects[0]}</span>}
                         </span>

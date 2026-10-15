@@ -6,7 +6,7 @@ const badgeStyles = cva("inline-flex items-center gap-1.5 rounded-full border px
   variants: {
     variant: {
       default: "border-line-strong bg-surface-raised text-muted",
-      mint: "border-accent/20 bg-accent-soft text-accent-strong",
+      accent: "border-accent/20 bg-accent-soft text-accent-strong",
       success: "border-success/20 bg-success-soft text-success",
       warning: "border-warning/20 bg-warning-soft text-warning",
       danger: "border-danger/20 bg-danger-soft text-danger",

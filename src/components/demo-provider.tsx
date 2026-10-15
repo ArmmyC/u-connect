@@ -78,6 +78,7 @@ export interface StateSnapshot extends Omit<DemoState, "members"> {
 }
 
 export type DemoLoadStatus = "loading" | "refreshing" | "success" | "error";
+const STATE_REQUEST_TIMEOUT_MS = 12_000;
 export interface DemoFeedback {
   status: "pending" | "success" | "error";
   message: string;
@@ -107,6 +108,7 @@ interface DemoProviderValue {
   isMutating: boolean;
   agentPending: boolean;
   agentResponse: AgentResponse | null;
+  agentError: string | null;
   runAgent: (text: string) => Promise<AgentResponse>;
   runTool: (tool: ToolName, input: unknown) => Promise<ToolResult>;
   createProject: (draft: ProjectDraft) => Promise<Project>;
@@ -217,6 +219,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [isMutating, setIsMutating] = useState(false);
   const [agentPending, setAgentPending] = useState(false);
   const [agentResponse, setAgentResponse] = useState<AgentResponse | null>(null);
+  const [agentError, setAgentError] = useState<string | null>(null);
   const hasLoaded = useRef(false);
   const candidateActorId = snapshot?.members.some((member) => member.id === savedCandidateActorId)
     ? savedCandidateActorId
@@ -225,18 +228,27 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async (options?: { quiet?: boolean }) => {
     if (!options?.quiet) setLoadStatus(hasLoaded.current ? "refreshing" : "loading");
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), STATE_REQUEST_TIMEOUT_MS);
     try {
-      const nextSnapshot = await requestJson<unknown>(`/api/state?actorId=${encodeURIComponent(actorId)}`, { cache: "no-store" });
+      const nextSnapshot = await requestJson<unknown>(`/api/state?actorId=${encodeURIComponent(actorId)}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
       if (!isStateSnapshot(nextSnapshot)) throw new DemoApiError("The state response has an unexpected shape.", "INVALID_RESPONSE");
       setSnapshot(nextSnapshot);
       setLoadError(null);
       hasLoaded.current = true;
       setLoadStatus("success");
     } catch (error) {
-      const message = errorMessage(error);
+      const message = controller.signal.aborted
+        ? `The workspace did not respond within ${STATE_REQUEST_TIMEOUT_MS / 1000} seconds. Check that the local demo service is running, then try again.`
+        : errorMessage(error);
       setLoadError(message);
       setLoadStatus(hasLoaded.current ? "success" : "error");
       throw error;
+    } finally {
+      window.clearTimeout(timeoutId);
     }
   }, [actorId]);
 
@@ -297,6 +309,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, [refresh, setActionFeedback, setIsMutating]);
 
   const runAgent = useCallback(async (text: string): Promise<AgentResponse> => {
+    setAgentResponse(null);
+    setAgentError(null);
     setAgentPending(true);
     setActionFeedback({ status: "pending", message: "Reading your brief and matching the demo catalog…" });
     try {
@@ -305,7 +319,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setActionFeedback({ status: "success", message: "Your brief is ready to review." });
       return response;
     } catch (error) {
-      setActionFeedback({ status: "error", message: errorMessage(error) });
+      const message = errorMessage(error);
+      setAgentError(message);
+      setActionFeedback({ status: "error", message });
       throw error;
     } finally {
       setAgentPending(false);
@@ -348,11 +364,11 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DemoProviderValue>(() => ({
     snapshot, loadStatus, loadError, refresh, actorMode, candidateActorId, actorId, actor, setActorMode,
     setCandidateActorId, setActorId,
-    actionFeedback, clearActionFeedback, isMutating, agentPending, agentResponse, runAgent, runTool,
+    actionFeedback, clearActionFeedback, isMutating, agentPending, agentResponse, agentError, runAgent, runTool,
     createProject, requestIntroduction, transitionIntroduction, recordInterest, resetDemo,
   }), [snapshot, loadStatus, loadError, refresh, actorMode, candidateActorId, actorId, actor, setActorMode,
     setCandidateActorId, setActorId,
-    actionFeedback, clearActionFeedback, isMutating, agentPending, agentResponse, runAgent, runTool,
+    actionFeedback, clearActionFeedback, isMutating, agentPending, agentResponse, agentError, runAgent, runTool,
     createProject, requestIntroduction, transitionIntroduction, recordInterest, resetDemo]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

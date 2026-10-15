@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="h-full antialiased" data-theme="dark">
+    <html lang="en" className="h-full antialiased" data-theme="light" data-scroll-behavior="smooth">
       <body className="min-h-full bg-bg font-sans text-main">
         <DemoProvider>
           <AppShell>{children}</AppShell>

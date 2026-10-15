@@ -23,14 +23,14 @@ function subscribeToTheme(onChange: () => void) {
 
 function getTheme(): Theme {
   try {
-    return window.localStorage.getItem(themeStorageKey) === "light" ? "light" : "dark";
+    return window.localStorage.getItem(themeStorageKey) === "dark" ? "dark" : "light";
   } catch {
-    return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
   }
 }
 
 function getServerTheme(): Theme {
-  return "dark";
+  return "light";
 }
 
 function saveTheme(theme: Theme) {

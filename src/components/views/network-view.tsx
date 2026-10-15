@@ -69,13 +69,12 @@ function ProjectCard({ project, introductions, ownerView, memberById, sharedCont
 }) {
   return (
     <Card className="min-w-0 overflow-hidden">
-      <div aria-hidden="true" className="h-1 bg-gradient-to-r from-accent/80 via-accent/25 to-transparent" />
       <CardHeader className="flex-row flex-wrap items-start justify-between gap-3 pt-5">
         <div className="min-w-0 flex-1"><p className="eyebrow">{ownerView ? "Your project" : "Project invitation"}</p><CardTitle className="mt-1 break-words text-lg">{project.title}</CardTitle><CardDescription className="mt-1 line-clamp-2">{project.description}</CardDescription></div>
         <Badge variant="default">{introductions.length} request{introductions.length === 1 ? "" : "s"}</Badge>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
-        <div className="flex flex-wrap gap-1.5">{project.skills.map((skill) => <Badge key={skill} variant="default">{skill}</Badge>)}{project.budgetTHB !== undefined && <Badge variant="mint">฿{project.budgetTHB.toLocaleString("en-US")} budget</Badge>}</div>
+        <div className="flex flex-wrap gap-1.5">{project.skills.map((skill) => <Badge key={skill} variant="default">{skill}</Badge>)}{project.budgetTHB !== undefined && <Badge variant="accent">฿{project.budgetTHB.toLocaleString("en-US")} budget</Badge>}</div>
         {introductions.length ? introductions.map((introduction) => {
           const member = memberById.get(introduction.memberId);
           const contact = introduction.status === "shared" ? sharedContacts[introduction.memberId] : undefined;

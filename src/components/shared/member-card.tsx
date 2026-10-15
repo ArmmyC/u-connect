@@ -36,7 +36,7 @@ export function MemberCard({ member, score, reasons }: { member: Member; score: 
           {score === null ? (
             <Badge variant="default">No score</Badge>
           ) : (
-            <Badge variant="mint"><Sparkles aria-hidden="true" className="size-3" />{score} fit</Badge>
+            <Badge variant="accent"><Sparkles aria-hidden="true" className="size-3" />{score} fit</Badge>
           )}
           <p className="mt-1.5 flex items-center justify-end gap-1 text-[10px] text-faint"><MapPin aria-hidden="true" className="size-3" />{member.location}</p>
         </div>

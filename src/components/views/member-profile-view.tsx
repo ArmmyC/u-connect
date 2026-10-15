@@ -29,7 +29,7 @@ export function MemberProfileContent({ member, sharedContact }: { member: Member
             <div className="mt-4 flex flex-wrap gap-2">
               <Badge variant="info" className="capitalize">{member.role}</Badge>
               <Badge variant="default"><MapPin aria-hidden="true" className="size-3" />{member.location}</Badge>
-              {member.openToCollaborate && <Badge variant="mint">Open to collaborate</Badge>}
+              {member.openToCollaborate && <Badge variant="accent">Open to collaborate</Badge>}
               {member.openToHire && <Badge variant="default">Open to hire</Badge>}
             </div>
             <p className="mt-4 max-w-3xl text-sm leading-6 text-main">{member.bio}</p>

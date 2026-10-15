@@ -23,7 +23,7 @@ export function OpportunityCard({ opportunity, ownerName, matchScore, matchReaso
           <Badge variant="info" className="capitalize">{opportunity.type}</Badge>
           <Badge variant={opportunity.status === "open" ? "success" : opportunity.status === "closed" ? "default" : "warning"} className="capitalize">{opportunity.status.replace("-", " ")}</Badge>
         </div>
-        {matchScore === null ? <Badge variant="default">No match</Badge> : <Badge variant="mint"><Sparkles aria-hidden="true" className="size-3" />{matchScore} fit</Badge>}
+        {matchScore === null ? <Badge variant="default">No match</Badge> : <Badge variant="accent"><Sparkles aria-hidden="true" className="size-3" />{matchScore} fit</Badge>}
       </div>
 
       <Link href={`/opportunities/${encodeURIComponent(opportunity.id)}`} className="mt-3 block break-words text-base font-semibold tracking-tight text-main decoration-accent underline-offset-4 hover:underline">{opportunity.title}</Link>

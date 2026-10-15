@@ -43,7 +43,7 @@ export function Topbar({ onMenuClick, theme, onToggleTheme }: TopbarProps) {
   }
 
   return (
-    <header className="topbar sticky top-0 z-30 flex h-[68px] items-center gap-2 px-4 md:gap-4 md:px-7 xl:px-9">
+    <header className="topbar sticky top-0 z-30 flex h-[68px] items-center gap-2 px-4 max-[360px]:gap-1 max-[360px]:px-2 md:gap-4 md:px-7 xl:px-9">
       <Button id="mobile-navigation-trigger" variant="subtle" size="icon" className="shrink-0 lg:hidden" aria-label="Open navigation menu" onClick={onMenuClick}>
         <Menu aria-hidden="true" className="size-5" />
       </Button>
@@ -63,7 +63,7 @@ export function Topbar({ onMenuClick, theme, onToggleTheme }: TopbarProps) {
         </div>
       </form>
 
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 md:gap-2.5">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 max-[360px]:gap-1 md:ml-0 md:gap-2.5">
         <Link href="/members" className="grid size-9 place-items-center rounded-control text-muted transition-colors hover:bg-surface-raised hover:text-main md:hidden" aria-label="Open member search">
           <Search aria-hidden="true" className="size-[18px]" />
         </Link>
@@ -89,7 +89,7 @@ export function Topbar({ onMenuClick, theme, onToggleTheme }: TopbarProps) {
           ))}
         </select>
 
-        <Button variant="subtle" size="icon" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} className="size-9">
+        <Button variant="subtle" size="icon" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} className="size-9 max-[360px]:hidden">
           {theme === "dark" ? <Sun aria-hidden="true" className="size-[17px]" /> : <Moon aria-hidden="true" className="size-[17px]" />}
         </Button>
       </div>

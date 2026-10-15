@@ -19,7 +19,7 @@ The first API request creates `data/demo-state.json` from the tracked fictional 
 curl -X POST http://localhost:3000/api/demo/reset
 ```
 
-Reset restores the seed state. It does not change the browser's saved demo actor or theme preference.
+The in-app action restores the seed state and resets the saved demo identity to Owner · Ada, with Erin as the default candidate. Calling the API endpoint directly restores the seed data without changing the browser's saved actor or theme preference.
 
 Useful checks:
 

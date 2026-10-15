@@ -74,7 +74,6 @@ export function OpportunityDetailView({ opportunityId }: { opportunityId: string
       <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_330px] xl:gap-5">
         <main className="min-w-0 space-y-4">
           <Card className="overflow-hidden">
-            <div aria-hidden="true" className="h-1.5 bg-gradient-to-r from-accent/90 via-accent/35 to-transparent" />
             <CardHeader className="pt-5 sm:pt-6">
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge variant="info" className="capitalize">{opportunity.type}</Badge>
@@ -116,7 +115,7 @@ export function OpportunityDetailView({ opportunityId }: { opportunityId: string
                   <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-strong"><Sparkles aria-hidden="true" className="size-4" /></span>
                   <div className="min-w-0"><p className="text-xs font-semibold text-main">{fit.score === null ? "No active match" : "Ranked fit"}</p><p className="mt-1 text-[10px] text-muted">{fit.score === null ? "The hard requirements are not met." : "Reasons come from the public member profile."}</p></div>
                 </div>
-                {fit.score === null ? <Badge variant="default">No score</Badge> : <Badge variant="mint">{fit.score} fit</Badge>}
+                {fit.score === null ? <Badge variant="default">No score</Badge> : <Badge variant="accent">{fit.score} fit</Badge>}
               </div>
               <ul className="mt-3 space-y-2">
                 {fit.reasons.map((reason) => <li key={reason} className="flex gap-2.5 text-xs leading-5 text-muted"><Check aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-accent-strong" /><span>{reason}</span></li>)}

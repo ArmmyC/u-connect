@@ -5,18 +5,12 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
-  BriefcaseBusiness,
   Check,
-  ChevronRight,
-  Clock3,
   Compass,
   LoaderCircle,
   MessageSquareText,
-  Plus,
   RefreshCw,
   Send,
-  Sparkles,
-  UsersRound,
 } from "lucide-react";
 import { matchCandidates } from "@/lib/matching";
 import type { Member, Opportunity } from "@/lib/types";
@@ -34,7 +28,7 @@ const suggestedPrompts = [
 
 interface MatchRow {
   member: Member;
-  score: number;
+  score?: number;
   reasons: string[];
 }
 
@@ -75,69 +69,53 @@ function summarizeAgentRow(value: unknown, index: number): AgentSummaryRow | nul
   };
 }
 
-function StatCard({ label, value, detail, icon: Icon, accent = false }: {
-  label: string;
-  value: number;
-  detail: string;
-  icon: typeof UsersRound;
-  accent?: boolean;
-}) {
-  return (
-    <Card className="metric-card relative overflow-hidden">
-      <CardContent className="flex h-full flex-col justify-between gap-4 p-4 md:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-[11px] font-semibold text-muted sm:text-xs">{label}</span>
-          <span className="metric-icon shrink-0"><Icon aria-hidden="true" className="size-[17px]" strokeWidth={1.8} /></span>
-        </div>
-        <div>
-          <div className="text-[28px] font-semibold leading-none tracking-tight text-main sm:text-[32px]">{value}</div>
-          <p className="mt-2 text-[10px] leading-4 text-faint sm:text-[11px]">{detail}</p>
-        </div>
-        {accent && <span aria-hidden="true" className="absolute bottom-0 left-0 h-0.5 w-16 bg-accent" />}
-      </CardContent>
-    </Card>
-  );
-}
-
 function MemberRecommendation({ match }: { match: MatchRow }) {
   return (
-    <Link href={`/members/${match.member.id}`} className="group flex items-start gap-3 rounded-xl border border-transparent p-2.5 transition-colors hover:border-line hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-      <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-[13px] bg-surface-overlay text-xs font-bold text-accent-strong">{initials(match.member.name)}</span>
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="truncate text-sm font-semibold text-main group-hover:text-accent-strong">{match.member.name}</span>
-          <Badge variant="mint" className="px-2 py-0.5 text-[10px]">{match.score} fit</Badge>
+    <li>
+      <Link href={`/members/${match.member.id}`} className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-overlay text-xs font-bold text-accent-strong">{initials(match.member.name)}</span>
+        <span className="min-w-0">
+          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="truncate text-sm font-semibold text-main group-hover:text-accent-strong">{match.member.name}</span>
+            {match.score !== undefined && <span className="text-xs font-semibold tabular-nums text-accent-strong">{match.score} fit</span>}
+          </span>
+          <span className="mt-1 block text-sm text-muted">{match.member.headline}</span>
+          {match.reasons.length > 0 && <span className="mt-2 block line-clamp-2 text-[13px] leading-5 text-muted">{match.reasons.slice(0, 2).join(" ")}</span>}
         </span>
-        <span className="mt-1 block truncate text-xs text-muted">{match.member.headline}</span>
-        <span className="mt-2 block line-clamp-2 text-[11px] leading-4 text-faint">{match.reasons[0] ?? "Profile fits the requested collaboration."}</span>
-      </span>
-      <ChevronRight aria-hidden="true" className="mt-2 size-4 shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-main" />
-    </Link>
+        <ArrowUpRight aria-hidden="true" className="mt-1 size-4 shrink-0 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-main" />
+      </Link>
+    </li>
   );
 }
 
 function OpportunityRecommendation({ match }: { match: OpportunityMatch }) {
   return (
-    <Link href={`/opportunities/${match.opportunity.id}`} className="group rounded-xl border border-line bg-surface-raised p-3.5 transition-colors hover:border-line-strong hover:bg-surface-overlay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-      <span className="flex items-start justify-between gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-info-soft text-info"><BriefcaseBusiness aria-hidden="true" className="size-4" /></span>
-        <Badge variant="mint" className="shrink-0">{match.score} fit</Badge>
-      </span>
-      <span className="mt-3 block text-sm font-semibold leading-5 text-main group-hover:text-accent-strong">{match.opportunity.title}</span>
-      <span className="mt-1 block text-xs text-muted">{match.opportunity.role} · {match.opportunity.compensation}</span>
-      <span className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-accent-strong">Why it fits <ArrowUpRight aria-hidden="true" className="size-3.5" /></span>
-    </Link>
+    <li>
+      <Link href={`/opportunities/${match.opportunity.id}`} className="group grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold leading-5 text-main group-hover:text-accent-strong">{match.opportunity.title}</span>
+          <span className="mt-1 block text-sm text-muted">{match.opportunity.role} · {match.opportunity.compensation}</span>
+          {match.reasons[0] && <span className="mt-2 block line-clamp-2 text-[13px] leading-5 text-muted">{match.reasons[0]}</span>}
+        </span>
+        <span className="flex flex-col items-end justify-between gap-3 text-accent-strong">
+          <span className="whitespace-nowrap text-xs font-semibold tabular-nums">{match.score} fit</span>
+          <ArrowUpRight aria-hidden="true" className="size-4 text-faint transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-main" />
+        </span>
+      </Link>
+    </li>
   );
 }
 
 function LoadingDashboard() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-7 md:px-7 md:py-9 xl:px-10" aria-busy="true" aria-label="Loading dashboard">
-      <div className="mb-7 h-3 w-36 animate-pulse rounded-full bg-surface-overlay" />
-      <div className="mb-3 h-9 w-64 max-w-full animate-pulse rounded-xl bg-surface-overlay" />
-      <div className="mb-8 h-4 w-80 max-w-full animate-pulse rounded-full bg-surface-overlay" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[0, 1, 2, 3].map((item) => <div key={item} className="h-32 animate-pulse rounded-card border border-line bg-surface" />)}</div>
-      <div className="mt-5 grid gap-4 lg:grid-cols-12"><div className="h-72 animate-pulse rounded-card border border-line bg-surface lg:col-span-8" /><div className="h-72 animate-pulse rounded-card border border-line bg-surface lg:col-span-4" /></div>
+      <p className="sr-only" role="status">Loading your demo workspace…</p>
+      <div className="mb-3 h-10 w-80 max-w-full animate-pulse rounded-xl bg-surface-overlay" />
+      <div className="mb-8 h-4 w-[min(32rem,100%)] animate-pulse rounded-full bg-surface-overlay" />
+      <div className="h-72 animate-pulse rounded-2xl border border-line bg-surface" />
+      <div className="mt-8 border-y border-line py-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">{[0, 1, 2, 3].map((item) => <div key={item} className="h-5 animate-pulse rounded-full bg-surface-overlay" />)}</div>
+      </div>
     </div>
   );
 }
@@ -145,19 +123,40 @@ function LoadingDashboard() {
 export function DashboardView() {
   const {
     snapshot, loadStatus, loadError, refresh, actor, actorMode, actorId,
-    agentPending, agentResponse, runAgent, actionFeedback,
+    agentPending, agentResponse, agentError, runAgent,
   } = useDemo();
   const [prompt, setPrompt] = useState("");
   const [promptError, setPromptError] = useState<string | null>(null);
+  const agentRows = agentResponse?.results.map(summarizeAgentRow).filter((row): row is AgentSummaryRow => row !== null) ?? [];
+  const usesBriefMemberMatches = agentResponse?.parsed.mode === "members" || agentResponse?.parsed.mode === "team";
+  const fallbackOpportunity = snapshot?.opportunities.find((item) => item.id === "opp-marketplace") ?? snapshot?.opportunities.find((item) => item.status === "open");
+  const agentStatus = agentPending
+    ? { label: "Finding matches…", variant: "info" as const }
+    : agentError
+      ? { label: "Needs attention", variant: "danger" as const }
+      : agentResponse
+        ? agentResponse.results.length
+          ? { label: "Results ready", variant: "success" as const }
+          : { label: "No exact matches", variant: "warning" as const }
+        : { label: "Ready", variant: "success" as const };
 
   const memberMatches = useMemo<MatchRow[]>(() => {
     if (!snapshot) return [];
-    const opportunity = snapshot.opportunities.find((item) => item.id === "opp-marketplace") ?? snapshot.opportunities.find((item) => item.status === "open");
-    if (!opportunity) return [];
-    return matchCandidates(opportunity, snapshot.members)
+    if (agentResponse && agentResponse.parsed.mode !== "opportunities") {
+      return agentResponse.results
+        .map(summarizeAgentRow)
+        .filter((row): row is AgentSummaryRow => row !== null)
+        .flatMap((row) => {
+          const member = snapshot.members.find((item) => item.id === row.id);
+          return member && member.id !== actorId ? [{ member, score: row.score, reasons: row.reasons }] : [];
+        })
+        .slice(0, 3);
+    }
+    if (!fallbackOpportunity) return [];
+    return matchCandidates(fallbackOpportunity, snapshot.members)
       .filter((match) => match.member.id !== actorId)
       .slice(0, 3);
-  }, [snapshot, actorId]);
+  }, [snapshot, actorId, agentResponse, fallbackOpportunity]);
 
   const opportunityMatches = useMemo<OpportunityMatch[]>(() => {
     if (!snapshot || !actor) return [];
@@ -212,8 +211,7 @@ export function DashboardView() {
     return (
       <section className="mx-auto flex min-h-[68vh] w-full max-w-3xl flex-col items-center justify-center px-5 py-12 text-center">
         <span className="metric-icon mb-5 size-12"><Compass aria-hidden="true" className="size-5" /></span>
-        <p className="eyebrow">Workspace unavailable</p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-main">We couldn’t load your demo workspace.</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-main">We couldn’t load your demo workspace.</h1>
         <p role="alert" className="mt-3 max-w-lg text-sm leading-6 text-muted">{loadError ?? "The local state service did not respond."}</p>
         <Button className="mt-6" onClick={() => void refresh().catch(() => undefined)}><RefreshCw aria-hidden="true" className="size-4" />Try again</Button>
       </section>
@@ -223,8 +221,6 @@ export function DashboardView() {
   const availableCount = snapshot.members.filter((member) => member.availability === "available").length;
   const openOpportunityCount = snapshot.opportunities.filter((opportunity) => opportunity.status === "open").length;
   const activeProjectCount = snapshot.projects.filter((project) => project.ownerId === actorId).length;
-  const agentRows = agentResponse?.results.map(summarizeAgentRow).filter((row): row is AgentSummaryRow => row !== null) ?? [];
-
   async function handlePromptSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const brief = prompt.trim();
@@ -247,18 +243,16 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-4 py-6 md:px-7 md:py-8 xl:px-10 xl:py-9">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow">Your community, in motion</p>
-          <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.04em] text-main sm:text-[34px]">
-            Welcome back{actor ? `, ${actor.name.split(" ")[0]}` : ""}.
-          </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted">Find people who move your next idea forward, or discover a project that fits your strengths.</p>
-        </div>
-        <Button asChild variant="secondary" className="self-start sm:self-auto">
-          <Link href="/team-builder"><Plus aria-hidden="true" className="size-4" />Build a team</Link>
-        </Button>
-      </div>
+      <header className="mb-7 max-w-3xl">
+        <h1 className="text-[30px] font-semibold leading-tight tracking-[-0.03em] text-main sm:text-[38px]">
+          {actorMode === "owner" ? "Turn an idea into a team." : "Find work that fits your strengths."}
+        </h1>
+        <p className="mt-3 max-w-[62ch] text-[15px] leading-6 text-muted">
+          {actorMode === "owner"
+            ? "Describe what you need. U-Connect searches the community for people and opportunities that can move it forward."
+            : "Describe what you want to do next. U-Connect searches open roles and projects across your community."}
+        </p>
+      </header>
 
       {loadError && loadStatus === "success" && (
         <div role="status" className="mb-4 flex items-center justify-between gap-3 rounded-control border border-warning/20 bg-warning-soft px-4 py-3 text-xs text-warning">
@@ -267,29 +261,26 @@ export function DashboardView() {
         </div>
       )}
 
-      <section aria-label="Workspace overview" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Community members" value={snapshot.members.length} detail={`${availableCount} available to collaborate`} icon={UsersRound} />
-        <StatCard label="Open opportunities" value={openOpportunityCount} detail="Projects, roles and freelance work" icon={BriefcaseBusiness} accent />
-        <StatCard label="Your projects" value={activeProjectCount} detail={actorMode === "owner" ? "Owned by this demo actor" : "Created in this workspace"} icon={Sparkles} />
-        <StatCard label="Pending intros" value={pendingIntroductions.length} detail={actorMode === "candidate" ? "Requests waiting on you" : "Requests awaiting a reply"} icon={Clock3} />
-      </section>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-12">
-        <Card className="overflow-hidden xl:col-span-8">
+      <div className="grid items-start gap-6 xl:grid-cols-12">
+        <Card className="overflow-hidden rounded-2xl shadow-none xl:col-span-8">
           <CardHeader className="flex-row items-start justify-between gap-4 pb-3 md:pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="grid size-8 place-items-center rounded-xl bg-accent-soft text-accent-strong"><Sparkles aria-hidden="true" className="size-4" /></span>
-                <span className="eyebrow">U-Connect assistant</span>
-              </div>
-              <CardTitle className="mt-3 text-lg">What are you looking to build?</CardTitle>
-              <CardDescription className="mt-1">Describe the skills or people you need. Matches come from the demo community.</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="text-xl leading-7 sm:text-2xl">
+                {actorMode === "owner" ? "Describe the team you need." : "Describe the work you want."}
+              </CardTitle>
+              <CardDescription className="mt-2 max-w-[58ch]">Mention skills, roles, or the outcome you have in mind. The agent will show how each result fits.</CardDescription>
             </div>
-            <Badge variant="success" className="hidden shrink-0 sm:inline-flex"><span aria-hidden="true" className="size-1.5 rounded-full bg-success" />Ready</Badge>
+            <Badge variant={agentStatus.variant} className="shrink-0" role="status" aria-live="polite" aria-atomic="true">
+              {agentPending && <LoaderCircle aria-hidden="true" className="size-3 animate-spin" />}
+              {!agentPending && <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />}
+              {agentStatus.label}
+            </Badge>
           </CardHeader>
           <CardContent className="pt-3 md:pt-4">
             <form onSubmit={handlePromptSubmit}>
-              <label className="sr-only" htmlFor="dashboard-agent-prompt">Describe the team or opportunity you need</label>
+              <label className="mb-2 block text-sm font-semibold text-main" htmlFor="dashboard-agent-prompt">
+                Your brief
+              </label>
               <Textarea
                 id="dashboard-agent-prompt"
                 rows={3}
@@ -298,17 +289,20 @@ export function DashboardView() {
                 placeholder="e.g. I need a frontend developer and a UI/UX designer to launch my startup MVP…"
                 aria-invalid={Boolean(promptError)}
                 aria-describedby={promptError ? "dashboard-prompt-error" : "dashboard-prompt-hint"}
-                className="min-h-[92px] border-line bg-bg/60 px-4 text-sm"
+                className="min-h-[108px] border-line-strong bg-bg/60 px-4 text-sm leading-6"
               />
-              {promptError ? <p id="dashboard-prompt-error" role="alert" className="mt-2 text-xs text-danger">{promptError}</p> : <p id="dashboard-prompt-hint" className="mt-2 text-[11px] text-faint">No prompt leaves this local demo. The agent shows its tool calls and matching reasons.</p>}
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-2" aria-label="Prompt suggestions">
-                  {suggestedPrompts.map((suggestion) => (
-                    <button key={suggestion} type="button" onClick={() => choosePrompt(suggestion)} className="rounded-pill border border-line px-2.5 py-1.5 text-[10px] font-medium text-muted transition-colors hover:border-line-strong hover:bg-surface-raised hover:text-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:text-[11px]">
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
+              {promptError ? <p id="dashboard-prompt-error" role="alert" className="mt-2 text-sm text-danger">{promptError}</p> : <p id="dashboard-prompt-hint" className="mt-2 text-[13px] leading-5 text-muted">Your brief stays in this local demo. Results show the tool calls and why each match fits.</p>}
+              <div className="mt-5 flex flex-col gap-4 border-t border-line pt-4 sm:flex-row sm:items-end sm:justify-between">
+                <fieldset className="min-w-0 flex-1" aria-label="Prompt suggestions">
+                  <legend className="text-sm font-medium text-main">Try a sample</legend>
+                  <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+                    {suggestedPrompts.map((suggestion) => (
+                      <button key={suggestion} type="button" onClick={() => choosePrompt(suggestion)} className="text-left text-sm leading-5 text-muted underline decoration-line underline-offset-4 transition-colors hover:text-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
                 <Button type="submit" disabled={agentPending} className="shrink-0 self-start sm:self-auto">
                   {agentPending ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin" /> : <Send aria-hidden="true" className="size-4" />}
                   {agentPending ? "Finding matches…" : "Find matches"}
@@ -316,35 +310,42 @@ export function DashboardView() {
               </div>
             </form>
 
-            {actionFeedback && (actionFeedback.status === "error" || agentResponse) && (
+            <div className="mt-4">
+              <Link href="/team-builder" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-strong underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                Build a team step by step<ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            </div>
+
+            {(agentError || agentResponse) && (
               <div className="mt-5 border-t border-line pt-4" aria-live="polite">
-                {actionFeedback.status === "error" ? (
-                  <p role="alert" className="rounded-control border border-danger/20 bg-danger-soft px-3.5 py-3 text-xs leading-5 text-danger">{actionFeedback.message}</p>
+                {agentError ? (
+                  <p role="alert" className="rounded-control border border-danger/20 bg-danger-soft px-3.5 py-3 text-sm leading-5 text-danger">{agentError}</p>
                 ) : agentResponse && (
-                  <div className="rounded-2xl border border-accent/15 bg-accent-soft/50 p-4">
+                  <div>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-accent-strong"><Check aria-hidden="true" className="size-4" />Brief interpreted</div>
+                        <div className="flex items-center gap-2 text-sm font-semibold text-accent-strong"><Check aria-hidden="true" className="size-4" />Brief interpreted</div>
                         <p className="mt-1.5 text-sm font-medium text-main">{agentResponse.parsed.intent}</p>
-                        <p className="mt-1 text-[11px] leading-5 text-muted">{agentResponse.parsed.rationale}</p>
+                        <p className="mt-1 text-sm leading-5 text-muted">{agentResponse.parsed.rationale}</p>
                       </div>
-                      <Badge variant="mint">{agentResponse.toolCalls.length} tool call{agentResponse.toolCalls.length === 1 ? "" : "s"}</Badge>
+                      <Badge variant="accent">{agentResponse.toolCalls.length} tool call{agentResponse.toolCalls.length === 1 ? "" : "s"}</Badge>
                     </div>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <ul className="mt-4 divide-y divide-line border-y border-line">
                       {agentRows.slice(0, 4).map((row) => (
-                        <div key={row.id} className="flex min-w-0 items-center gap-2.5 rounded-xl border border-line/70 bg-surface/70 px-3 py-2.5">
-                          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-overlay text-[10px] font-bold text-accent-strong">{initials(row.name)}</span>
+                        <li key={row.id} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 py-3">
+                          <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-overlay text-xs font-bold text-accent-strong">{initials(row.name)}</span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-xs font-semibold text-main">{row.name}</span>
-                            <span className="block truncate text-[10px] text-muted">{row.headline}</span>
+                            <span className="block truncate text-sm font-semibold text-main">{row.name}</span>
+                            <span className="block text-sm text-muted">{row.headline}</span>
+                            {row.reasons.length > 0 && <span className="mt-2 block space-y-1">{row.reasons.slice(0, 2).map((reason) => <span key={reason} className="block text-[13px] leading-5 text-muted">{reason}</span>)}</span>}
                           </span>
-                          {row.score !== undefined && <span className="shrink-0 text-[10px] font-semibold text-accent-strong">{row.score}</span>}
-                        </div>
+                          {row.score !== undefined && <span className="shrink-0 text-xs font-semibold tabular-nums text-accent-strong">{row.score} fit</span>}
+                        </li>
                       ))}
-                    </div>
-                    {agentResponse.results.length === 0 && <p className="mt-3 text-xs text-muted">No exact matches yet. Try a different skill or role.</p>}
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/70 pt-3">
-                      <span className="flex items-center gap-1.5 text-[10px] text-muted"><MessageSquareText aria-hidden="true" className="size-3.5" />Tool: <code className="font-mono text-accent-strong">{agentResponse.toolCalls[0]?.tool ?? "none"}</code></span>
+                    </ul>
+                    {agentResponse.results.length === 0 && <p className="mt-3 text-sm text-muted">No exact matches yet. Try a different skill or role.</p>}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+                      <span className="flex items-center gap-1.5 text-sm text-muted"><MessageSquareText aria-hidden="true" className="size-4" />Tool: <code className="font-mono text-accent-strong">{agentResponse.toolCalls[0]?.tool ?? "none"}</code></span>
                       <Button asChild variant="subtle" size="sm" className="-mr-2"><Link href="/agent">Open agent workspace<ArrowRight aria-hidden="true" className="size-3.5" /></Link></Button>
                     </div>
                   </div>
@@ -354,103 +355,111 @@ export function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card className="xl:col-span-4">
-          <CardHeader className="flex-row items-start justify-between">
-            <div>
-              <CardTitle>Activity</CardTitle>
-              <CardDescription className="mt-1">What’s moving in your workspace</CardDescription>
+        <aside className="min-w-0 pt-1 xl:col-span-4 xl:border-l xl:border-line xl:pl-6">
+          <section aria-labelledby="dashboard-activity-heading">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="dashboard-activity-heading" className="text-lg font-semibold tracking-tight text-main">Activity</h2>
+              <Link href="/network" className="inline-flex items-center gap-1 text-sm font-medium text-accent-strong underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                Network<ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
             </div>
-            <span className="grid size-8 place-items-center rounded-xl bg-surface-overlay text-muted"><Clock3 aria-hidden="true" className="size-4" /></span>
-          </CardHeader>
-          <CardContent className="pt-4">
+            <p className="mt-1 text-sm leading-5 text-muted">Projects and introductions in this workspace.</p>
             {activity.length ? (
-              <ol className="space-y-4">
+              <ol className="mt-4 divide-y divide-line border-y border-line">
                 {activity.map((entry) => (
-                  <li key={entry.id} className="flex gap-3">
-                    <span aria-hidden="true" className={`mt-0.5 grid size-7 shrink-0 place-items-center rounded-full ${entry.status === "accepted" || entry.status === "confirmed" || entry.status === "shared" ? "bg-success-soft text-success" : "bg-info-soft text-info"}`}>
-                      {entry.status === "accepted" || entry.status === "confirmed" || entry.status === "shared" ? <Check className="size-3.5" /> : <MessageSquareText className="size-3.5" />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-main">{entry.title}</p>
-                      <p className="mt-1 text-[11px] leading-4 text-muted">{entry.detail}</p>
+                  <li key={entry.id} className="flex min-w-0 items-start justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-main">{entry.title}</p>
+                      <p className="mt-1 text-[13px] leading-5 text-muted">{entry.detail}</p>
                     </div>
-                    <time className="shrink-0 pt-0.5 text-[10px] text-faint" dateTime={entry.date}>{new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time>
+                    <time className="shrink-0 pt-0.5 text-xs tabular-nums text-muted" dateTime={entry.date}>{new Date(entry.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</time>
                   </li>
                 ))}
               </ol>
             ) : (
-              <div className="flex min-h-36 flex-col items-center justify-center rounded-2xl border border-dashed border-line-strong px-5 py-6 text-center">
-                <span className="grid size-10 place-items-center rounded-full bg-surface-overlay text-faint"><MessageSquareText aria-hidden="true" className="size-[18px]" /></span>
-                <p className="mt-3 text-xs font-semibold text-main">A fresh start</p>
-                <p className="mt-1 max-w-[230px] text-[11px] leading-5 text-muted">Your project, introductions and interests will show up here.</p>
-              </div>
+              <p className="mt-4 border-y border-line py-4 text-sm leading-6 text-muted"><span className="font-semibold text-main">No activity yet.</span> Projects, introductions, and interests will appear here.</p>
             )}
 
             <div className="mt-5 border-t border-line pt-4">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-semibold text-main">Pending introductions</p>
-                <Badge variant={pendingIntroductions.length ? "warning" : "default"}>{pendingIntroductions.length}</Badge>
+                <h3 className="text-sm font-semibold text-main">Pending introductions</h3>
+                <span className="text-sm font-semibold tabular-nums text-muted">{pendingIntroductions.length}</span>
               </div>
               {pendingIntroductions.length ? (
-                <ul className="space-y-2">
+                <ul className="divide-y divide-line">
                   {pendingIntroductions.slice(0, 2).map((intro) => {
                     const project = snapshot.projects.find((item) => item.id === intro.projectId);
                     const candidate = snapshot.members.find((item) => item.id === intro.memberId);
-                    return <li key={intro.id} className="flex items-center gap-2 text-[11px] text-muted"><span aria-hidden="true" className="size-1.5 rounded-full bg-warning" /><span className="min-w-0 flex-1 truncate">{actorMode === "candidate" ? project?.title : candidate?.name}</span><span className="shrink-0 text-warning">Awaiting reply</span></li>;
+                    return <li key={intro.id} className="flex items-start justify-between gap-3 py-3 text-sm text-muted"><span className="min-w-0 truncate">{actorMode === "candidate" ? project?.title : candidate?.name}</span><span className="shrink-0 text-warning">Awaiting reply</span></li>;
                   })}
                 </ul>
               ) : (
-                <p className="text-[11px] leading-5 text-faint">No requests need attention right now.</p>
+                <p className="text-sm leading-5 text-muted">No requests need attention right now.</p>
               )}
-              <Button asChild variant="subtle" size="sm" className="mt-3 -ml-2"><Link href="/network">Open network<ArrowRight aria-hidden="true" className="size-3.5" /></Link></Button>
             </div>
-          </CardContent>
-        </Card>
+          </section>
+        </aside>
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-12">
-        <Card className="xl:col-span-7">
-          <CardHeader className="flex-row items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2"><UsersRound aria-hidden="true" className="size-4 text-accent" /><span className="eyebrow">Made for collaboration</span></div>
-              <CardTitle className="mt-2">Members to know</CardTitle>
-              <CardDescription className="mt-1">People who fit the community marketplace brief.</CardDescription>
-            </div>
-            <Button asChild variant="subtle" size="sm" className="-mr-2 shrink-0"><Link href="/members">Browse all<ArrowRight aria-hidden="true" className="size-3.5" /></Link></Button>
-          </CardHeader>
-          <CardContent className="space-y-1 pt-3">
-            {memberMatches.length ? memberMatches.map((match) => <MemberRecommendation key={match.member.id} match={match} />) : (
-              <p className="rounded-xl bg-surface-raised px-4 py-5 text-sm text-muted">No members match this brief yet. Browse the full directory to explore more skills.</p>
-            )}
-          </CardContent>
-        </Card>
+      <section aria-label="Workspace overview" className="mt-8 border-y border-line py-4">
+        <h2 className="sr-only">Workspace overview</h2>
+        <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
+          <li><span className="font-semibold tabular-nums text-main">{snapshot.members.length}</span> members <span className="text-faint">· {availableCount} available</span></li>
+          <li><span className="font-semibold tabular-nums text-main">{openOpportunityCount}</span> open opportunities</li>
+          <li><span className="font-semibold tabular-nums text-main">{activeProjectCount}</span> your projects</li>
+          <li><span className="font-semibold tabular-nums text-main">{pendingIntroductions.length}</span> pending introductions</li>
+        </ul>
+      </section>
 
-        <Card className="xl:col-span-5">
-          <CardHeader className="flex-row items-start justify-between gap-3">
+      <div className="mt-9 grid items-start gap-10 xl:grid-cols-2 xl:gap-12">
+        <section className="min-w-0" aria-labelledby="dashboard-members-heading">
+          <header className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2"><BriefcaseBusiness aria-hidden="true" className="size-4 text-info" /><span className="eyebrow">A good next step</span></div>
-              <CardTitle className="mt-2">Opportunities for you</CardTitle>
-              <CardDescription className="mt-1">Open roles that fit {actor?.name.split(" ")[0] ?? "your"}’s listed skills.</CardDescription>
+              <h2 id="dashboard-members-heading" className="text-xl font-semibold tracking-tight text-main">Members to meet</h2>
+              <p className="mt-1 max-w-[62ch] text-sm leading-5 text-muted">
+                {usesBriefMemberMatches
+                  ? "Matched to your latest member or team brief."
+                  : fallbackOpportunity
+                    ? agentResponse
+                      ? `People with relevant skills for ${fallbackOpportunity.title}.`
+                      : `Strong candidates for ${fallbackOpportunity.title}. Submit a brief above for team matches.`
+                    : "Run a member or team brief to see relevant people here."}
+              </p>
             </div>
-            <Button asChild variant="subtle" size="sm" className="-mr-2 shrink-0"><Link href="/opportunities">View all<ArrowRight aria-hidden="true" className="size-3.5" /></Link></Button>
-          </CardHeader>
-          <CardContent className="grid gap-2.5 pt-3">
-            {opportunityMatches.length ? opportunityMatches.map((match) => <OpportunityRecommendation key={match.opportunity.id} match={match} />) : (
-              <p className="rounded-xl bg-surface-raised px-4 py-5 text-sm text-muted">No exact opportunity matches yet. Add more skills to your profile or explore every open listing.</p>
+            <Button asChild variant="subtle" size="sm" className="-mr-3 shrink-0"><Link href="/members">Browse all<ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
+          </header>
+          {memberMatches.length ? (
+            <ul className="mt-4 divide-y divide-line border-y border-line">
+              {memberMatches.map((match) => <MemberRecommendation key={match.member.id} match={match} />)}
+            </ul>
+          ) : (
+              <p className="mt-4 border-y border-line py-4 text-sm leading-6 text-muted">{usesBriefMemberMatches ? "No members matched your latest brief. Try a different skill or role." : "No community recommendations are available right now. Run a member or team brief above."}</p>
             )}
-          </CardContent>
-        </Card>
+        </section>
+
+        <section className="min-w-0" aria-labelledby="dashboard-opportunities-heading">
+          <header className="flex items-start justify-between gap-4">
+            <div>
+              <h2 id="dashboard-opportunities-heading" className="text-xl font-semibold tracking-tight text-main">Opportunities to explore</h2>
+              <p className="mt-1 max-w-[62ch] text-sm leading-5 text-muted">Open roles related to {actor?.name.split(" ")[0] ?? "your"}’s listed skills.</p>
+            </div>
+            <Button asChild variant="subtle" size="sm" className="-mr-3 shrink-0"><Link href="/opportunities">View all<ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
+          </header>
+          {opportunityMatches.length ? (
+            <ul className="mt-4 divide-y divide-line border-y border-line">
+              {opportunityMatches.map((match) => <OpportunityRecommendation key={match.opportunity.id} match={match} />)}
+            </ul>
+          ) : (
+              <p className="mt-4 border-y border-line py-4 text-sm leading-6 text-muted">No exact opportunity matches yet. Add more skills to your profile or explore every open listing.</p>
+            )}
+        </section>
       </div>
 
-      <section className="mt-4 rounded-card border border-line bg-surface-raised/65 p-4 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-5">
-        <div className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-strong"><Compass aria-hidden="true" className="size-[17px]" /></span>
-          <div>
-            <p className="text-xs font-semibold text-main">A private, local-first demo</p>
-            <p className="mt-1 text-[11px] leading-5 text-muted">Contact details stay hidden until a candidate accepts and the project owner explicitly shares them.</p>
-          </div>
-        </div>
-        <Button asChild variant="outline" size="sm" className="mt-3 shrink-0 sm:mt-0"><Link href="/playground">Explore the tools<ChevronRight aria-hidden="true" className="size-3.5" /></Link></Button>
+      <section className="mt-9 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+        <p className="max-w-[70ch] text-sm leading-6 text-muted">
+          <span className="font-semibold text-main">Introductions are consent-based.</span> Contact details stay hidden until a candidate accepts and the project owner explicitly shares them.
+        </p>
+        <Button asChild variant="outline" size="sm" className="self-start shrink-0 sm:self-auto"><Link href="/playground">Explore the agent tools<ArrowRight aria-hidden="true" className="size-4" /></Link></Button>
       </section>
     </div>
   );
