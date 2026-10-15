@@ -23,6 +23,9 @@
 - GREEN: the first implementation run passed the parser cases and dispatch tests but correctly failed the injected-contact-field profile test. The public-field allowlist fixed that leak.
 - Review fix RED: focused tests failed on member budget filtering/parser propagation, private workflow adapter fields, inherited `toString` tool lookup, empty search schemas, and thrown adapter errors.
 - Review fix GREEN: `npm test -- --run tests/agent.test.ts tests/tools.test.ts tests/matching.test.ts` passed (3 files, 26 tests).
+- Privacy follow-up RED: `npm test -- --run tests/tools.test.ts` failed on an injected `email` field in the raw `search_opportunities` result, confirming catalog overrides could leak undeclared fields. Added an explicit public `Opportunity` projection preserving the established catalog fields; the injected `email`, `phone`, and `contact` fields are now absent.
+- Strengthened the member-budget regression to assert the seed-backed in-budget `mem-ben` appears and the over-budget `mem-ada` does not.
+- Follow-up GREEN: focused tools and matching tests pass after both changes.
 - `npm run typecheck` passed.
 - `git diff --check` passed.
 

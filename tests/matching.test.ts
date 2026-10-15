@@ -13,6 +13,8 @@ describe('matching', () => {
     const result = searchMembers({ skills: ['React'], budgetTHB: 900, budgetUnit: 'hourly' });
     expect(result.length).toBeGreaterThan(0);
     expect(result.every((member) => member.compensationUnit === 'hourly' && (member.compensationAmountTHB ?? Infinity) <= 900)).toBe(true);
+    expect(result.map((member) => member.id)).toContain('mem-ben');
+    expect(result.map((member) => member.id)).not.toContain('mem-ada');
   });
   it('rejects incomplete member budget filters', () => {
     expect(() => searchMembers({ budgetTHB: 500 })).toThrow(/budgetUnit/i);

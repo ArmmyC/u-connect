@@ -49,6 +49,19 @@ describe('dispatchTool', () => {
     expect(result.ok && 'email' in (result.result as object)).toBe(false);
     expect(result.ok && 'phone' in (result.result as object)).toBe(false);
   });
+  it('omits injected private fields from opportunity search results', async () => {
+    const result = await dispatchTool('search_opportunities', { skills: ['Python'] }, {
+      opportunities: [{ ...opportunities[0], requiredSkills: ['Python'], email: 'private@example.test', phone: '555', contact: 'secret' }] as any,
+    });
+    expect(result).toMatchObject({ ok: true });
+    expect(JSON.stringify(result)).not.toContain('private@example.test');
+    expect(JSON.stringify(result)).not.toContain('555');
+    expect(JSON.stringify(result)).not.toContain('secret');
+    expect((result as any).result[0]).toMatchObject({
+      id: opportunities[0].id, title: opportunities[0].title, ownerId: opportunities[0].ownerId,
+      requiredSkills: ['Python'],
+    });
+  });
   it('redacts contacts from workflow adapter results and enforces pending introductions', async () => {
     const project = await dispatchTool('create_project', { ownerId: members[0].id, title: 'Demo', description: 'Demo project', skills: [] }, {
       createProject: async () => ({ id: 'p1', ownerId: members[0].id, title: 'Demo', description: 'Demo project', skills: [], budgetTHB: 10, email: 'secret@example.test', phone: '555' } as any),

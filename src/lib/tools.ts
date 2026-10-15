@@ -19,6 +19,12 @@ const publicMember = (member: Member) => ({
   compensationUnit: member.compensationUnit, compensationAmountTHB: member.compensationAmountTHB,
   openToCollaborate: member.openToCollaborate, openToHire: member.openToHire,
 });
+const publicOpportunity = (opportunity: Opportunity) => ({
+  id: opportunity.id, ownerId: opportunity.ownerId, title: opportunity.title, type: opportunity.type,
+  role: opportunity.role, description: opportunity.description, requiredSkills: opportunity.requiredSkills,
+  compensation: opportunity.compensation, budgetTHB: opportunity.budgetTHB, budgetUnit: opportunity.budgetUnit,
+  deadline: opportunity.deadline, status: opportunity.status,
+});
 
 function projectPublic(value: Project) {
   return { id: value.id, ownerId: value.ownerId, title: value.title, description: value.description, skills: value.skills, ...(value.budgetTHB !== undefined ? { budgetTHB: value.budgetTHB } : {}) };
@@ -37,7 +43,7 @@ async function dispatchToolUnchecked(name: string, input: unknown, services: Too
   const args = parsed.data as Record<string, any>;
   switch (tool) {
     case 'search_members': return { ok: true, tool, result: searchMembers(args, catalog).map(publicMember) };
-    case 'search_opportunities': return { ok: true, tool, result: searchOpportunities(args, opps) };
+    case 'search_opportunities': return { ok: true, tool, result: searchOpportunities(args, opps).map(publicOpportunity) };
     case 'match_candidates': {
       const opportunity = opps.find((item) => item.id === args.opportunityId);
       return opportunity ? { ok: true, tool, result: matchCandidates(opportunity, catalog).map((item) => ({ ...item, member: publicMember(item.member) })) } : failure('NOT_FOUND', 'Opportunity was not found.');
