@@ -63,17 +63,32 @@ export function recommendTeam(options: TeamOptions, catalog: Member[] = members)
     .map((member) => ({ ...scoreMember(member, requiredSkills, options.budgetTHB, options.budgetUnit), requestedRole: role }))
     .sort((a, b) => b.score - a.score || a.member.id.localeCompare(b.member.id));
   if (roles.length) {
-    const used = new Set<string>();
+    const assignedMemberRole = new Map<string, number>();
+    const assignedRoleMember = new Map<number, TeamRecommendation>();
+    const assignRole = (roleIndex: number, seenMembers: Set<string>): boolean => {
+      for (const candidate of byScore(roles[roleIndex])) {
+        const memberId = candidate.member.id;
+        if (seenMembers.has(memberId)) continue;
+        seenMembers.add(memberId);
+        const previousRole = assignedMemberRole.get(memberId);
+        if (previousRole === undefined || assignRole(previousRole, seenMembers)) {
+          assignedMemberRole.set(memberId, roleIndex);
+          assignedRoleMember.set(roleIndex, candidate);
+          return true;
+        }
+      }
+      return false;
+    };
+    roles.forEach((_, roleIndex) => assignRole(roleIndex, new Set()));
     const recommendations: TeamRecommendation[] = [];
     const filledRoles: string[] = [];
     const unfilledRoles: string[] = [];
-    for (const role of roles) {
-      const candidate = byScore(role).find((result) => !used.has(result.member.id));
-      if (!candidate) { unfilledRoles.push(role); continue; }
-      used.add(candidate.member.id);
+    roles.forEach((role, roleIndex) => {
+      const candidate = assignedRoleMember.get(roleIndex);
+      if (!candidate) { unfilledRoles.push(role); return; }
       recommendations.push(candidate);
       filledRoles.push(role);
-    }
+    });
     return { recommendations, filledRoles, unfilledRoles };
   }
   const recommendations = eligible.map((member) => ({ ...scoreMember(member, requiredSkills, options.budgetTHB, options.budgetUnit), requestedRole: null }))

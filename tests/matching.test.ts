@@ -71,4 +71,16 @@ describe('matching', () => {
     expect(result.filledRoles).toEqual([]);
     expect(result.unfilledRoles).toEqual([]);
   });
+
+  it('covers all roles when a flexible candidate could otherwise take a scarce role', () => {
+    const flexible = { ...members[1], id: 'flexible', headline: 'Frontend designer', availability: 'available' as const };
+    const frontendOnly = { ...members[1], id: 'frontend-only', headline: 'Frontend engineer', availability: 'part-time' as const };
+    const result = recommendTeam({ roles: ['frontend', 'designer'] }, [flexible, frontendOnly]);
+    expect(result.filledRoles).toEqual(['frontend', 'designer']);
+    expect(result.unfilledRoles).toEqual([]);
+    expect(result.recommendations.map((item) => [item.requestedRole, item.member.id])).toEqual([
+      ['frontend', 'frontend-only'],
+      ['designer', 'flexible'],
+    ]);
+  });
 });

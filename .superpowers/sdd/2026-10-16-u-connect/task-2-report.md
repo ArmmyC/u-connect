@@ -39,3 +39,6 @@
 - Updated `npm run typecheck`: passed.
 - Updated `git diff --check`: passed.
 - Replaced all fictional `github.com` links with `github.example.test` placeholders. None are claimed as real or verified accounts.
+- Follow-up assignment test: before the fix, `npm test -- --run tests/matching.test.ts` failed because greedy assignment filled only `frontend`, leaving `designer` unfilled despite an available full assignment.
+- Replaced greedy role assignment with augmenting-path maximum-cardinality matching. Candidate alternatives are considered in descending deterministic score order; coverage is prioritized and output retains requested-role order, distinct member IDs, and explicit `filledRoles`/`unfilledRoles`.
+- Final verification: `npm test -- --run tests/seed.test.ts tests/matching.test.ts` passed (2 files, 12 tests); `npm run typecheck` passed; `git diff --check` passed.
