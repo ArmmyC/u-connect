@@ -1,0 +1,40 @@
+import { describe, expect, it } from 'vitest';
+import { matchCandidates, recommendTeam, searchMembers, searchOpportunities } from '@/lib/matching';
+import { members, opportunities } from '@/lib/seed';
+
+describe('matching', () => {
+  it('filters members by all requested hard skills and availability', () => {
+    const result = searchMembers({ skills: ['React', 'TypeScript'], availability: 'available' });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((member) => member.availability === 'available' && ['React','TypeScript'].every((skill) => member.skills.includes(skill)))).toBe(true);
+  });
+
+  it('filters opportunities by required skills and budget', () => {
+    const result = searchOpportunities({ skills: ['Python'], budgetTHB: 60000 });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((item) => item.requiredSkills.includes('Python') && (item.budgetTHB ?? Infinity) <= 60000)).toBe(true);
+  });
+
+  it('returns candidates in deterministic score order with evidence-based reasons', () => {
+    const opportunity = opportunities.find((item) => item.id === 'opp-marketplace')!;
+    const result = matchCandidates(opportunity, members);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.map(({score}) => score)).toEqual([...result.map(({score}) => score)].sort((a,b) => b-a));
+    expect(result[0].member.skills).toContain('React');
+    expect(result[0].reasons.join(' ')).toMatch(/React|TypeScript|project/i);
+    expect(result.every(({reasons}) => reasons.length > 0)).toBe(true);
+  });
+
+  it('uses budget fit to order otherwise eligible candidates', () => {
+    const opportunity = { ...opportunities.find((item) => item.id === 'opp-marketplace')!, requiredSkills: ['React'], budgetTHB: 900 };
+    const result = matchCandidates(opportunity, members.filter((member) => ['mem-ben','mem-ada'].includes(member.id)));
+    expect(result[0].member.id).toBe('mem-ben');
+    expect(result[0].reasons.join(' ')).toMatch(/budget|rate/i);
+  });
+
+  it('recommends distinct role-compatible team members', () => {
+    const result = recommendTeam({ roles: ['Frontend engineer', 'Product designer'], skills: ['React','UI/UX'], count: 2 });
+    expect(result).toHaveLength(2);
+    expect(new Set(result.map((item) => item.member.id)).size).toBe(2);
+  });
+});
