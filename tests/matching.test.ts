@@ -9,6 +9,16 @@ describe('matching', () => {
     expect(result.every((member) => member.availability === 'available' && ['React','TypeScript'].every((skill) => member.skills.includes(skill)))).toBe(true);
   });
 
+  it('filters members by paired budget and compensation unit', () => {
+    const result = searchMembers({ skills: ['React'], budgetTHB: 900, budgetUnit: 'hourly' });
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((member) => member.compensationUnit === 'hourly' && (member.compensationAmountTHB ?? Infinity) <= 900)).toBe(true);
+  });
+  it('rejects incomplete member budget filters', () => {
+    expect(() => searchMembers({ budgetTHB: 500 })).toThrow(/budgetUnit/i);
+    expect(() => searchMembers({ budgetUnit: 'hourly' })).toThrow(/budgetTHB/i);
+  });
+
   it('filters opportunities by required skills and budget', () => {
     const result = searchOpportunities({ skills: ['Python'], budgetTHB: 60000, budgetUnit: 'project' });
     expect(result.length).toBeGreaterThan(0);

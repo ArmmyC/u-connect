@@ -1,7 +1,7 @@
 import { members, opportunities } from './seed';
 import type { Availability, CompensationUnit, Member, Opportunity, OpportunityType } from './types';
 
-export interface SearchMemberOptions { query?: string; role?: string; skills?: string[]; availability?: Availability; }
+export interface SearchMemberOptions { query?: string; role?: string; skills?: string[]; availability?: Availability; budgetTHB?: number; budgetUnit?: CompensationUnit; }
 export interface SearchOpportunityOptions { query?: string; type?: OpportunityType; skills?: string[]; budgetTHB?: number; budgetUnit?: CompensationUnit; }
 export interface MatchResult { member: Member; score: number; reasons: string[]; }
 export interface TeamOptions { roles?: string[]; skills?: string[]; budgetTHB?: number; budgetUnit?: CompensationUnit; count?: number; }
@@ -13,11 +13,13 @@ const includesAll = (haystack: string[], requested: string[]) => requested.every
 const textMatches = (values: string[], query: string) => values.join(' ').toLowerCase().includes(normalize(query));
 
 export function searchMembers(options: SearchMemberOptions = {}, catalog: Member[] = members): Member[] {
+  if ((options.budgetTHB === undefined) !== (options.budgetUnit === undefined)) throw new Error('budgetTHB and budgetUnit must be supplied together.');
   return catalog.filter((member) =>
     (!options.query || textMatches([member.name, member.headline, member.bio, ...member.skills, ...member.projects, ...member.interests], options.query)) &&
     (!options.role || normalize(member.role) === normalize(options.role) || normalize(member.headline).includes(normalize(options.role))) &&
     (!options.skills?.length || includesAll(member.skills, options.skills)) &&
-    (!options.availability || member.availability === options.availability),
+    (!options.availability || member.availability === options.availability) &&
+    (options.budgetTHB === undefined || (member.compensationAmountTHB !== undefined && member.compensationUnit === options.budgetUnit && member.compensationAmountTHB <= options.budgetTHB)),
   );
 }
 

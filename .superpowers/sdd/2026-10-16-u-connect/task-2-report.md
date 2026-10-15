@@ -20,7 +20,7 @@
 
 - Use `Member`/`MemberProfile`, `Opportunity`, `Project`, `Introduction`, `Interest`, and `DemoState` from `@/lib/types`.
 - Seed arrays are exported as `members` and `opportunities` from `@/lib/seed`.
-- `searchMembers({ query?, role?, skills?, availability? }, catalog?)` and `searchOpportunities({ query?, type?, skills?, budgetTHB? }, catalog?)` return filtered arrays.
+- `searchMembers({ query?, role?, skills?, availability?, budgetTHB?, budgetUnit? }, catalog?)` and `searchOpportunities({ query?, type?, skills?, budgetTHB?, budgetUnit? }, catalog?)` return filtered arrays. Member budget amount and unit must be supplied together; candidates must have a listed numeric compensation amount in the same unit at or below the budget. Opportunity budget amount and unit must also be supplied together and require matching listed units.
 - `matchCandidates(opportunity, catalog?)` returns `{ member, score, reasons }[]`; all required opportunity skills are hard filters, and busy members are excluded.
 - Members use `compensationUnit` and optional `compensationAmountTHB`; opportunities use `budgetUnit` and optional `budgetTHB`. Units are typed as hourly, monthly, project, equity, or negotiable. Numeric budget scoring occurs only when both sides have numeric values and identical units. Opportunity budget search also requires an explicit matching `budgetUnit`.
 - `recommendTeam({ roles?, skills?, budgetTHB?, budgetUnit?, count? }, catalog?)` returns `{ recommendations, filledRoles, unfilledRoles }`. Each recommendation includes `requestedRole`; when roles are requested, each is filled at most once with a distinct person and every unavailable slot appears in `unfilledRoles`. When no roles are requested, it returns the top `count` (default 5) eligible candidates, with `requestedRole: null` and empty role status arrays.
@@ -42,3 +42,8 @@
 - Follow-up assignment test: before the fix, `npm test -- --run tests/matching.test.ts` failed because greedy assignment filled only `frontend`, leaving `designer` unfilled despite an available full assignment.
 - Replaced greedy role assignment with augmenting-path maximum-cardinality matching. Candidate alternatives are considered in descending deterministic score order; coverage is prioritized and output retains requested-role order, distinct member IDs, and explicit `filledRoles`/`unfilledRoles`.
 - Final verification: `npm test -- --run tests/seed.test.ts tests/matching.test.ts` passed (2 files, 12 tests); `npm run typecheck` passed; `git diff --check` passed.
+
+## Member budget search interface extension
+
+- `searchMembers` now accepts the paired optional `budgetTHB` and `budgetUnit` filters. Supplying only one throws an input error; when supplied, results require same-unit numeric compensation at or below the requested amount.
+- TDD evidence: new tests first failed because member search returned over-budget React candidates and accepted incomplete budget options. After adding paired validation and the same-unit cap, focused matching tests pass.
