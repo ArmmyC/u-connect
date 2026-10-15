@@ -1,6 +1,8 @@
 export type MemberRole = 'engineering' | 'design' | 'marketing' | 'founding' | 'recruiting' | 'business';
 export type OpportunityType = 'project' | 'job' | 'freelance' | 'collaboration' | 'cofounder';
 export type Availability = 'available' | 'part-time' | 'busy';
+export type CompensationUnit = 'hourly' | 'monthly' | 'project' | 'equity' | 'negotiable';
+export type BudgetUnit = 'hourly' | 'monthly' | 'project';
 export type OpportunityStatus = 'open' | 'in-progress' | 'closed';
 export type IntroductionStatus = 'pending' | 'accepted' | 'declined' | 'confirmed' | 'shared';
 
@@ -19,7 +21,8 @@ export interface MemberProfile {
   interests: string[];
   preferredWork: string[];
   compensation: string;
-  hourlyRateTHB?: number;
+  compensationUnit: CompensationUnit;
+  compensationAmountTHB?: number;
   openToCollaborate: boolean;
   openToHire: boolean;
 }
@@ -36,6 +39,7 @@ export interface Opportunity {
   requiredSkills: string[];
   compensation: string;
   budgetTHB?: number;
+  budgetUnit?: CompensationUnit;
   deadline: string;
   status: OpportunityStatus;
 }

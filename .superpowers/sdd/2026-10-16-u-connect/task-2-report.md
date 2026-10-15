@@ -22,11 +22,20 @@
 - Seed arrays are exported as `members` and `opportunities` from `@/lib/seed`.
 - `searchMembers({ query?, role?, skills?, availability? }, catalog?)` and `searchOpportunities({ query?, type?, skills?, budgetTHB? }, catalog?)` return filtered arrays.
 - `matchCandidates(opportunity, catalog?)` returns `{ member, score, reasons }[]`; all required opportunity skills are hard filters, and busy members are excluded.
-- `recommendTeam({ roles?, skills?, budgetTHB?, count? }, catalog?)` returns distinct ranked `{ member, score, reasons }[]`. Team skills are collective preferences across role candidates; opportunity matching remains the all-required-skills hard filter.
-- Scores and reasons are deterministic. Reasons cite member skills, stated availability, listed hourly rate, or a seed project description. No external verification is implied.
+- Members use `compensationUnit` and optional `compensationAmountTHB`; opportunities use `budgetUnit` and optional `budgetTHB`. Units are typed as hourly, monthly, project, equity, or negotiable. Numeric budget scoring occurs only when both sides have numeric values and identical units. Opportunity budget search also requires an explicit matching `budgetUnit`.
+- `recommendTeam({ roles?, skills?, budgetTHB?, budgetUnit?, count? }, catalog?)` returns `{ recommendations, filledRoles, unfilledRoles }`. Each recommendation includes `requestedRole`; when roles are requested, each is filled at most once with a distinct person and every unavailable slot appears in `unfilledRoles`. When no roles are requested, it returns the top `count` (default 5) eligible candidates, with `requestedRole: null` and empty role status arrays.
+- Team skills remain collective candidate preferences; opportunity matching remains the all-required-skills hard filter. Scores and reasons are deterministic. Reasons cite member skills, stated availability, unit-compatible listed compensation, or a seed project description. No external verification is implied.
 
 ## Limitations
 
 - The entire catalog and every portfolio/project entry are fictional demo records; `.example.test` links are placeholders.
-- Budget fit uses `hourlyRateTHB` where present. Opportunity `budgetTHB` may represent a fixed project/monthly budget, so later UI or agent work should present units clearly and avoid treating it as a validated hourly quote.
+- Budget fit only compares values with the same declared unit. These fictional amounts are illustrative, not validated quotes.
 - Search comparisons are exact for skill names (case-insensitive); free-text query matching uses a simple case-insensitive substring check.
+
+## Reviewer fix round
+
+- Added tests first for same-unit versus incompatible-unit budget scoring and role-slot assignment/reporting. The initial matching run showed the expected failures: incompatible compensation scored 95 versus the no-budget score of 75, and the old array return did not expose role coverage or unfilled slots.
+- Updated `npm test -- --run tests/seed.test.ts tests/matching.test.ts`: passed (2 files, 11 tests).
+- Updated `npm run typecheck`: passed.
+- Updated `git diff --check`: passed.
+- Replaced all fictional `github.com` links with `github.example.test` placeholders. None are claimed as real or verified accounts.

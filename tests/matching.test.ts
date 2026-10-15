@@ -10,7 +10,7 @@ describe('matching', () => {
   });
 
   it('filters opportunities by required skills and budget', () => {
-    const result = searchOpportunities({ skills: ['Python'], budgetTHB: 60000 });
+    const result = searchOpportunities({ skills: ['Python'], budgetTHB: 60000, budgetUnit: 'project' });
     expect(result.length).toBeGreaterThan(0);
     expect(result.every((item) => item.requiredSkills.includes('Python') && (item.budgetTHB ?? Infinity) <= 60000)).toBe(true);
   });
@@ -26,15 +26,49 @@ describe('matching', () => {
   });
 
   it('uses budget fit to order otherwise eligible candidates', () => {
-    const opportunity = { ...opportunities.find((item) => item.id === 'opp-marketplace')!, requiredSkills: ['React'], budgetTHB: 900 };
+    const opportunity = { ...opportunities.find((item) => item.id === 'opp-marketplace')!, requiredSkills: ['React'], budgetTHB: 900, budgetUnit: 'hourly' as const };
     const result = matchCandidates(opportunity, members.filter((member) => ['mem-ben','mem-ada'].includes(member.id)));
     expect(result[0].member.id).toBe('mem-ben');
     expect(result[0].reasons.join(' ')).toMatch(/budget|rate/i);
   });
 
+  it('scores budget fit only when compensation units match', () => {
+    const candidate = members.find((member) => member.id === 'mem-ben')!;
+    const opportunity = { ...opportunities[0], requiredSkills: ['React'], budgetTHB: 900, budgetUnit: 'hourly' as const };
+    const compatible = matchCandidates(opportunity, [candidate])[0];
+    expect(compatible.reasons.join(' ')).toMatch(/fits the ฿900\/hour budget/);
+    const incompatible = matchCandidates({ ...opportunity, budgetUnit: 'project' }, [candidate])[0];
+    const withoutBudget = matchCandidates({ ...opportunity, budgetTHB: undefined, budgetUnit: undefined }, [candidate])[0];
+    expect(incompatible.score).toBe(withoutBudget.score);
+    expect(incompatible.reasons.join(' ')).not.toMatch(/budget|rate|฿\/hour/i);
+  });
+
   it('recommends distinct role-compatible team members', () => {
     const result = recommendTeam({ roles: ['Frontend engineer', 'Product designer'], skills: ['React','UI/UX'], count: 2 });
-    expect(result).toHaveLength(2);
-    expect(new Set(result.map((item) => item.member.id)).size).toBe(2);
+    expect(result.recommendations).toHaveLength(2);
+    expect(new Set(result.recommendations.map((item) => item.member.id)).size).toBe(2);
+    expect(result.filledRoles).toEqual(['Frontend engineer', 'Product designer']);
+    expect(result.unfilledRoles).toEqual([]);
+  });
+
+  it('fills each requested role once and reports unfilled roles', () => {
+    const candidates = [
+      { ...members[1], id: 'front-a', headline: 'Frontend engineer' },
+      { ...members[1], id: 'front-b', headline: 'Frontend engineer' },
+      { ...members[4], id: 'design-a', headline: 'Product designer' },
+    ];
+    const result = recommendTeam({ roles: ['Frontend engineer', 'Product designer', 'Recruiter'] }, candidates);
+    expect(result.recommendations.map((item) => item.requestedRole)).toEqual(['Frontend engineer', 'Product designer']);
+    expect(new Set(result.recommendations.map((item) => item.member.id)).size).toBe(2);
+    expect(result.filledRoles).toEqual(['Frontend engineer', 'Product designer']);
+    expect(result.unfilledRoles).toEqual(['Recruiter']);
+  });
+
+  it('returns a ranked fallback team when no roles are specified', () => {
+    const result = recommendTeam({ count: 3 });
+    expect(result.recommendations).toHaveLength(3);
+    expect(result.recommendations.every((item) => item.requestedRole === null)).toBe(true);
+    expect(result.filledRoles).toEqual([]);
+    expect(result.unfilledRoles).toEqual([]);
   });
 });
