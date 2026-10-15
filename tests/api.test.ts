@@ -122,4 +122,25 @@ describe('demo API routes', () => {
     expect(state.interests).toEqual([]);
     expect(state.projects).toEqual([]);
   });
+
+  it('reports one duplicate when concurrent requests target the same project member', async () => {
+    await useTemporaryState();
+    const create = await postTool(jsonRequest('POST', {
+      actorId: 'mem-ada',
+      input: { ownerId: 'mem-ada', title: 'Concurrent MVP', description: 'Exercise request serialization.', skills: [] },
+    }), { params: Promise.resolve({ tool: 'create_project' }) });
+    const created = await responseBody<{ ok: true; result: { id: string } }>(create);
+    const requestIntroduction = () => postTool(jsonRequest('POST', {
+      actorId: 'mem-ada', input: { projectId: created.result.id, memberId: 'mem-ben' },
+    }), { params: Promise.resolve({ tool: 'request_introduction' }) });
+
+    const responses = await Promise.all([requestIntroduction(), requestIntroduction()]);
+    const successful = responses.filter((response) => response.status === 200);
+    const duplicate = responses.find((response) => response.status !== 200);
+
+    expect(successful).toHaveLength(1);
+    expect(duplicate?.status).toBe(409);
+    if (!duplicate) throw new Error('Expected the concurrent request to be rejected as a duplicate.');
+    expect(await responseBody(duplicate)).toMatchObject({ ok: false, error: { code: 'DUPLICATE_INTRO' } });
+  });
 });

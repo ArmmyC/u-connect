@@ -1,5 +1,5 @@
 import { dispatchTool } from '@/lib/tools';
-import { getDemoStore } from '@/lib/server/store';
+import { getDemoStore, StoreError } from '@/lib/server/store';
 import { apiError, isRecord, jsonResponse, readJsonBody, responseForError, toolErrorStatus } from '@/lib/server/http';
 
 interface RouteContext { params: Promise<{ tool: string }>; }
@@ -46,9 +46,18 @@ export async function POST(request: Request, context: RouteContext) {
           return apiError('DUPLICATE_INTRO', 'An introduction was already requested for this project and member.', 409);
         }
       }
+      const captured = { duplicateError: null as StoreError | null };
       const result = await dispatchTool(tool, input, {
-        requestIntroduction: (introInput) => store.requestIntroduction({ ...introInput, requesterId: actorId }),
+        requestIntroduction: async (introInput) => {
+          try {
+            return await store.requestIntroduction({ ...introInput, requesterId: actorId });
+          } catch (error) {
+            if (error instanceof StoreError && error.code === 'DUPLICATE_INTRO') captured.duplicateError = error;
+            throw error;
+          }
+        },
       });
+      if (captured.duplicateError) return apiError('DUPLICATE_INTRO', captured.duplicateError.message, 409);
       if (!result.ok) return jsonResponse(result, toolErrorStatus(result.error.code));
       return jsonResponse(result);
     }
